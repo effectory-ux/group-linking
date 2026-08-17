@@ -11,8 +11,9 @@ structuur, zodat scores over de tijd vergeleken kunnen worden.
 | [stepped.html](https://effectory-ux.github.io/group-linking/stepped.html) | de stapsgewijze basisflow |
 | [deep.html](https://effectory-ux.github.io/group-linking/deep.html) | een diepe boom, als stresstest |
 
-`tokens.css`, `foundation.css`, `components.css`, `icons.js` en `assets/` komen uit het
-[Engage design system](https://effectory-ux.github.io/Engage-Design-system-/) en staan
-hier als kopie, zodat elke pagina op zichzelf werkt.
+Tokens, componenten, iconen en illustraties komen rechtstreeks van het
+[Engage design system](https://effectory-ux.github.io/Engage-Design-system-/), dus deze
+repo bevat alleen de pagina's zelf. Een wijziging in het design system is hier meteen
+zichtbaar. Keerzijde: verhuist die site, dan moeten deze links mee.
 
 Toegevoegd aan de galerij op https://effectory-ux.github.io/prototypes/
