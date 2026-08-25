@@ -244,10 +244,11 @@
     .gl-hist-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
     .gl-history { width: 100%; padding: var(--spacing-loose); background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-lg); }
     .gl-hist-lead { font-size: 14px; line-height: 1.55; color: var(--content-secondary); margin: 0 0 var(--spacing-base); }
-    .gl-chain { position: relative; padding-left: var(--spacing-loose); }
-    .gl-chain::before { content: ''; position: absolute; left: 5px; top: 14px; bottom: 14px; width: 2px; background: var(--border-base); }
+    /* the rail and the dots share one axis, so they cannot drift apart again */
+    .gl-chain { position: relative; padding-left: var(--spacing-loose); --gl-chain-axis: 6px; }
+    .gl-chain::before { content: ''; position: absolute; left: calc(var(--gl-chain-axis) - 1px); top: 14px; bottom: 14px; width: 2px; background: var(--border-base); }
     .gl-chain-item { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); padding: var(--spacing-tight) 0; }
-    .gl-chain-item::before { content: ''; position: absolute; left: calc(-1 * var(--spacing-loose) + 1px); top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border-radius: var(--radius-full); background: var(--bg-positive); box-shadow: 0 0 0 3px var(--bg-base); }
+    .gl-chain-item::before { content: ''; position: absolute; left: calc(var(--gl-chain-axis) - var(--spacing-loose)); top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border-radius: var(--radius-full); background: var(--bg-positive); box-shadow: 0 0 0 3px var(--bg-base); }
     .gl-chain-item.role-current::before { background: var(--bg-brand); }
     .gl-chain-item.role-linked::before { background: var(--content-subtle); }
     .gl-chain-main { display: flex; flex-direction: column; min-width: 0; }
@@ -1307,7 +1308,7 @@
                         <span class="ss-cmp-tag">Current survey</span>
                         <div class="ss-cmp-name">Deep Structure Pulse July 2026</div>
                       </div>
-                      <div class="ss-cmp-status"><span class="ss-status is-running">Running <span class="ss-status-sub">until Aug 3, 2026</span></span></div>
+                      <div class="ss-cmp-status"><span class="ss-status is-running">Running <span class="ss-status-sub">until 3 Aug 2026</span></span></div>
                     </div>
                     <div class="ss-cmp-conn" aria-hidden="true"><span class="ss-cmp-conn-line"></span><span class="ss-cmp-conn-dot"><i data-icon="link"></i></span><span class="ss-cmp-conn-line"></span></div>
                     <div class="ss-cmp-card is-compared" id="survCmpCard">
@@ -2865,6 +2866,14 @@ $('#historyToggle') && $('#historyToggle').addEventListener('click', () => {
   if (open) renderHistory();
 });
 
+// One date format across the chain. The completed surveys carry their status in SURVEY_META;
+// the running one is this survey, which is not in there.
+const CURRENT_STATUS = { statusLabel: 'Running', statusSub: 'until 3 Aug 2026' };
+function chainStatus(name) {
+  const info = name === CURRENT_SURVEY ? CURRENT_STATUS : SURVEY_META[name];
+  if (!info || !info.statusLabel) return '';
+  return info.statusLabel + (info.statusSub ? ' ' + info.statusSub : '');
+}
 function renderHistory() {
   const el = $('#historyChain'); if (!el) return;
   const sel = state.selectedSurvey;
@@ -2877,11 +2886,11 @@ function renderHistory() {
     return;
   }
   const items = [
-    { name: CURRENT_SURVEY, meta: 'Pulse survey · July 2026', role: 'current', tag: 'This survey', tagCls: 'is-match' },
-    { name: sel, meta: (SURVEY_META[sel] && SURVEY_META[sel].typeYear) || '', role: 'comparing', tag: 'Comparing with', tagCls: 'is-linked' },
+    { name: CURRENT_SURVEY, meta: chainStatus(CURRENT_SURVEY), role: 'current', tag: 'This survey' },
+    { name: sel, meta: chainStatus(sel), role: 'comparing', tag: 'Comparing with' },
     // only the same project, otherwise every unrelated survey in the account claims to be linked
     ...SURVEYS.filter(s => s !== sel && (SURVEY_META[s] || {}).project === CURRENT_PROJECT)
-      .map(s => ({ name: s, meta: (SURVEY_META[s] && SURVEY_META[s].typeYear) || '', role: 'linked', tag: 'Linked', tagCls: 'is-new' })),
+      .map(s => ({ name: s, meta: chainStatus(s), role: 'linked', tag: 'Linked' })),
   ];
   el.innerHTML = items.map(it =>
     '<div class="gl-chain-item role-' + it.role + '">' +
