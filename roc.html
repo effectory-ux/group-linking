@@ -981,6 +981,59 @@
       .tr-check { opacity: 1; }
       .tr-lrow.is-empty .tr-empty-plus { opacity: 1; }
     }
+    /* ── Edge case: no previous survey selected yet ── */
+    .ss-cmp-card.is-blank { border-style: dashed; border-color: var(--border-action); background: var(--bg-secondary); box-shadow: none; }
+    .ss-cmp-card.is-blank .ss-cmp-name { color: var(--content-secondary); font-weight: 500; }
+    .ss-cmp-card.is-blank .ss-cmp-tag { color: var(--content-subtle); }
+
+    /* ── Edge case: nothing to link with at all (first survey) ── */
+    .gl-noprev { display: flex; align-items: flex-start; gap: var(--spacing-base); padding: var(--spacing-loose); margin-top: var(--spacing-base); background: var(--bg-secondary); border: 1px solid var(--border-base); border-radius: var(--radius-lg); }
+    .gl-noprev-icon { flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; background: var(--bg-info-subtle); color: var(--content-info); }
+    .gl-noprev-icon i { width: 20px; height: 20px; display: flex; }
+    .gl-noprev-title { font-size: 16px; font-weight: 600; color: var(--content-base); }
+    .gl-noprev-text { font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin: var(--spacing-extra-tight) 0 0; }
+    .gl-noprev-foot { margin-top: var(--spacing-base); }
+    /* .link-inline is a text-only component in the design system, so it sizes no icon of its own */
+    .gl-noprev-foot .link-inline { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); }
+    .gl-noprev-foot .link-inline i { width: 16px; height: 16px; display: flex; flex-shrink: 0; }
+    @media (max-width: 640px) { .gl-noprev { flex-direction: column; } }
+
+    /* ── Edge case: step 2 cannot be opened yet ── */
+    .acc.is-blocked .acc-head { cursor: not-allowed; }
+    .acc.is-blocked .acc-num { background: var(--bg-disabled); color: var(--content-disabled); }
+    .acc.is-blocked .acc-title { color: var(--content-disabled); }
+    .acc.is-blocked .acc-chev { color: var(--content-disabled); }
+    .acc.is-blocked .acc-summary, .acc.is-blocked .acc-description { display: none; }
+    .acc-blocked-note { display: none; font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin-top: 2px; }
+    .acc.is-blocked .acc-blocked-note { display: flex; align-items: center; gap: var(--spacing-extra-tight); }
+    .acc-blocked-note i { width: 16px; height: 16px; display: flex; flex-shrink: 0; }
+
+    /* ── Developer panel (⌘/Ctrl + .) ──
+       Deliberately outside the design system: this is prototype tooling, not product UI, so it
+       must never be mistaken for a screen under review. Hidden until the shortcut is pressed. */
+    .gl-dev { position: fixed; right: 16px; bottom: 16px; z-index: 900; width: 320px; max-width: calc(100vw - 32px);
+              background: #101a2f; color: #e7ebf5; border: 1px solid #35425f; border-radius: var(--radius-lg);
+              box-shadow: 0 16px 40px rgb(0 0 0 / 40%); font-size: 14px; line-height: 1.5; }
+    .gl-dev[hidden] { display: none; }
+    .gl-dev-head { display: flex; align-items: center; gap: var(--spacing-tight); padding: var(--spacing-base-tight) var(--spacing-base); border-bottom: 1px solid #35425f; }
+    .gl-dev-title { flex: 1; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #94a2c4; }
+    .gl-dev-x { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0;
+                background: none; border: 0; border-radius: var(--radius-sm); color: #94a2c4; cursor: pointer; }
+    .gl-dev-x:hover { background: #1c2848; }
+    .gl-dev-x i { width: 14px; height: 14px; display: flex; }
+    .gl-dev-body { padding: var(--spacing-base-tight); display: flex; flex-direction: column; gap: 2px; }
+    .gl-dev-label { font-size: 12px; font-weight: 600; color: #94a2c4; padding: var(--spacing-extra-tight) var(--spacing-tight); }
+    .gl-dev-opt { display: flex; align-items: flex-start; gap: var(--spacing-tight); width: 100%; padding: var(--spacing-tight);
+                  font-family: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-radius: var(--radius-md); color: inherit; cursor: pointer; }
+    .gl-dev-opt:hover { background: #16223c; }
+    .gl-dev-opt.is-on { background: #1b2a4a; }
+    .gl-dev-radio { flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: var(--radius-full); border: 1px solid #5b6a8c; }
+    .gl-dev-opt.is-on .gl-dev-radio { border-color: #57c4c0; box-shadow: inset 0 0 0 3px #57c4c0; }
+    .gl-dev-opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .gl-dev-opt-name { font-weight: 500; }
+    .gl-dev-opt-note { font-size: 12px; line-height: 1.45; color: #9fadcd; }
+    .gl-dev-foot { padding: var(--spacing-tight) var(--spacing-base) var(--spacing-base-tight); font-size: 12px; color: #8a99bd; border-top: 1px solid #35425f; }
+    .gl-dev-foot kbd { font-family: inherit; font-size: 12px; padding: 1px 5px; border: 1px solid #4a587a; border-radius: var(--radius-sm); background: #17223c; }
 </style>
 </head>
 <body>
@@ -1091,7 +1144,7 @@
         <div class="ov-tips">
           <span class="ov-tips-icon"><i data-icon="lightbulb"></i></span>
           <div class="ov-tips-viewport" id="ovTipsTrack">
-            <div class="ov-tip-item is-active">
+            <div class="ov-tip-item is-active" data-tip-needs="prev">
               <div class="ov-tip-copy"><div class="ov-tip-title">Link a previous survey to see results over time</div><div class="ov-tip-text">Connect this survey to an earlier one to compare scores and spot trends across your teams.</div></div>
               <button class="ov-tip-cta" data-goto="linking">Link previous survey <i data-icon="arrow-right"></i></button>
             </div>
@@ -1103,7 +1156,7 @@
               <div class="ov-tip-copy"><div class="ov-tip-title">Lift your response rate with reminders</div><div class="ov-tip-text">Schedule automatic reminders to nudge people before the survey closes.</div></div>
               <button class="ov-tip-cta">Set reminders <i data-icon="arrow-right"></i></button>
             </div>
-            <div class="ov-tip-item">
+            <div class="ov-tip-item" data-tip-needs="prev">
               <div class="ov-tip-copy"><div class="ov-tip-title">Link groups even when names don’t match</div><div class="ov-tip-text">Renamed or reorganized a team? Connect the old group to its new one so their results stay linked over time.</div></div>
               <button class="ov-tip-cta" data-goto="linking">Review group links <i data-icon="arrow-right"></i></button>
             </div>
@@ -1243,7 +1296,7 @@
           <button class="acc-head" data-acctoggle="select" aria-expanded="false">
             <span class="acc-num">1</span>
             <span class="acc-head-text">
-              <span class="acc-title">Select a survey to compare with</span>
+              <span class="acc-title" id="accSelectTitle">Select a survey to compare with</span>
               <span class="acc-summary" id="accSelectSummary"></span>
             </span>
             <i class="acc-chev" data-icon="chevron-down"></i>
@@ -1253,7 +1306,8 @@
             <div class="ss-layout">
               <div class="ss-main">
                 <div class="ss-field">
-                  <p class="ss-help">We’ve auto-selected the most recent completed survey to compare against. Its scores appear next to this survey’s, so you can see how each group has changed. Change it if you’d rather compare with another survey.</p>
+                  <div id="ssHasPrev">
+                  <p class="ss-help" id="ssHelp">We’ve auto-selected the most recent completed survey to compare against. Its scores appear next to this survey’s, so you can see how each group has changed. Change it if you’d rather compare with another survey.</p>
                   <div class="ss-compare">
                     <div class="ss-cmp-card">
                       <div class="ss-cmp-meta">
@@ -1263,7 +1317,7 @@
                       <div class="ss-cmp-status"><span class="ss-status is-running">Running <span class="ss-status-sub">until Aug 3, 2026</span></span></div>
                     </div>
                     <div class="ss-cmp-conn" aria-hidden="true"><span class="ss-cmp-conn-line"></span><span class="ss-cmp-conn-dot"><i data-icon="link"></i></span><span class="ss-cmp-conn-line"></span></div>
-                    <div class="ss-cmp-card is-compared">
+                    <div class="ss-cmp-card is-compared" id="survCmpCard">
                       <div class="ss-cmp-body">
                         <div class="ss-cmp-meta">
                           <span class="ss-cmp-tag">Compared with</span>
@@ -1277,6 +1331,17 @@
                   <div class="ss-compare-foot">
                     <button class="btn btn-tertiary gl-hist-toggle" id="historyToggle" aria-expanded="false">View survey links <i data-icon="chevron-down"></i></button>
                     <button class="btn btn-primary" id="ssContinueBtn">Continue to linking <i data-icon="arrow-right"></i></button>
+                  </div>
+                  </div><!-- /ssHasPrev -->
+
+                  <!-- Edge case: this is the first survey, so there is nothing to compare with yet -->
+                  <div class="gl-noprev" id="ssNoPrev" hidden>
+                    <div class="gl-noprev-icon"><i data-icon="info"></i></div>
+                    <div>
+                      <div class="gl-noprev-title">This is your first survey</div>
+                      <p class="gl-noprev-text">Linking compares this survey with an earlier one, and there is no completed survey in your account yet. Once this survey closes you can link the next one to it, and the trend lines start from there.</p>
+                      <div class="gl-noprev-foot"><a class="link-inline" href="https://support.effectory.com/" target="_blank" rel="noopener noreferrer">How linking works <i data-icon="external-link"></i></a></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1298,6 +1363,7 @@
               <span class="acc-title">Link the groups from both surveys</span>
               <span class="acc-description">Link the groups from the current survey to the previous survey, so every group in your survey can show a previous-survey score.</span>
               <span class="acc-summary" id="accLinkSummary"></span>
+              <span class="acc-blocked-note" id="accLinkNote"></span>
             </span>
             <i class="acc-chev" data-icon="chevron-down"></i>
           </button>
@@ -2626,6 +2692,8 @@ const AV_COLORS = ['av-blue', 'av-turquoise', 'av-green', 'av-orange', 'av-yello
 const state = {
   view: 'overview',
   tab: 'pending',
+  scenario: 'default',       // edge case the developer panel put the page in
+  prevAvailable: true,       // false when the account has no earlier survey at all
   selected: new Set(),
   structFilter: new Set(),
   selectedSurvey: SURVEYS[0],
@@ -2768,6 +2836,63 @@ document.addEventListener('click', (e) => {
   if (nav) { e.preventDefault(); goToView(nav.dataset.nav); }
 });
 
+/* ═══════════════ EDGE-CASE SCENARIOS ═══════════════ */
+// Prototype tooling, driven from the developer panel (⌘/Ctrl + .). A scenario only sets the
+// starting conditions; every render reads state.prevAvailable and state.selectedSurvey, so
+// picking a survey inside the "nothing selected" scenario recovers the normal flow by itself.
+const SCENARIOS = [
+  { key: 'default', label: 'Previous survey auto-selected',
+    note: 'The happy path: the most recent completed survey in this project is picked for you.' },
+  { key: 'no-selection', label: 'No previous survey selected yet',
+    note: 'Completed surveys exist, but none was a close enough match to pick automatically.' },
+  { key: 'no-surveys', label: 'First survey in the account',
+    note: 'Nothing has run before, so there is nothing to link with. Linking is unavailable.' },
+];
+function availableSurveys() { return state.prevAvailable ? SURVEYS : []; }
+// step 2 needs both a previous survey to exist and one to be chosen
+function linkingBlocked() { return !state.prevAvailable || !state.selectedSurvey; }
+
+function applyScenario(key) {
+  const sc = SCENARIOS.find(x => x.key === key) || SCENARIOS[0];
+  state.scenario = sc.key;
+  state.prevAvailable = sc.key !== 'no-surveys';
+  state.selectedSurvey = sc.key === 'default' ? SURVEYS[0] : null;
+  pendingSurvey = state.selectedSurvey;
+  applyPrevious(SURVEYS[0]);            // restore the pristine link set, whatever was clicked before
+  state.treeSelected.clear(); state.treeSelectAnchor = null; state.treeLinkingNodeId = null;
+  closeOverlays();
+  if (linkingBlocked()) { openAcc('link', false); openAcc('select', false); }
+  syncScenarioUI();
+  // keep the scenario in the URL, so an edge case can be handed over as a link
+  const q = sc.key === 'default' ? '' : '?scenario=' + sc.key;
+  history.replaceState(null, '', location.pathname + q + location.hash);
+}
+
+// single place that re-reads the two flags and brings the whole page in line
+function syncScenarioUI() {
+  const blocked = linkingBlocked();
+  const acc = $('#acc-link');
+  if (acc) {
+    acc.classList.toggle('is-blocked', blocked);
+    const head = acc.querySelector('.acc-head');
+    if (head) head.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+  }
+  const note = $('#accLinkNote');
+  if (note) note.innerHTML = '<i data-icon="lock"></i> ' + (state.prevAvailable
+    ? 'Select a survey in step 1 first.'
+    : 'Available once you have a completed survey to compare with.');
+  const has = $('#ssHasPrev'); if (has) has.hidden = !state.prevAvailable;
+  const none = $('#ssNoPrev'); if (none) none.hidden = state.prevAvailable;
+  renderSurvSelect();
+  updateAccSummaries();
+  renderOverview();
+  renderHistory();
+  syncTips();
+  renderDevPanel();
+  if (state.view === 'linking') renderLinking();
+  icons();
+}
+
 /* ═══════════════ STEPPED FLOW: 1) select survey → 2) link groups ═══════════════ */
 const SURVEY_META = {
   'ROC van Amsterdam - 🔴 ROC van Amsterdam-Flevoland MO, 2024': { program: 'HRM · Engagement', typeYear: 'Engagement survey · 2024', statusKey: 'completed', statusLabel: 'Completed', statusSub: 'on 31 Oct 2024', response: 88 },
@@ -2784,17 +2909,27 @@ function respRate(info) {
     '<div class="srv-bar"><div class="srv-bar-fill" style="width:' + info.response + '%"></div></div></div>';
 }
 let pendingSurvey = null;
+const SS_HELP_PICKED = 'We’ve auto-selected the most recent completed survey to compare against. Its scores appear next to this survey’s, so you can see how each group has changed. Change it if you’d rather compare with another survey.';
+const SS_HELP_BLANK = 'None of the completed surveys in this account was a close enough match to pick automatically, so choose which one to compare against. Its scores appear next to this survey\u2019s, so you can see how each group has changed.';
 function renderSurvSelect() {
-  const info = SURVEY_META[state.selectedSurvey];
-  const v = $('#survSelectVal'); if (v) v.innerHTML = surveyHTML(state.selectedSurvey);
+  const sel = state.selectedSurvey;
+  const info = SURVEY_META[sel];
+  const card = $('#survCmpCard'); if (card) card.classList.toggle('is-blank', !sel);
+  // the slot label stays put; only its value says the slot is empty
+  const v = $('#survSelectVal'); if (v) v.innerHTML = sel ? surveyHTML(sel) : 'No survey selected';
   const st = $('#survSelectStatus'); if (st) st.innerHTML = statusBadge(info);
   const rt = $('#survSelectResp'); if (rt) rt.innerHTML = respRate(info);
+  const help = $('#ssHelp'); if (help) help.textContent = sel ? SS_HELP_PICKED : SS_HELP_BLANK;
+  // nothing chosen yet makes picking one the primary action, and linking unreachable
+  const btn = $('#survChangeBtn');
+  if (btn) { btn.textContent = sel ? 'Change' : 'Select survey'; btn.className = sel ? 'btn btn-secondary' : 'btn btn-primary'; }
+  const cont = $('#ssContinueBtn'); if (cont) cont.disabled = !sel;
   icons();
 }
 function renderSurvPicker() {
   const list = $('#survPickerList'); if (!list) return;
   const yearOf = s => parseInt((((SURVEY_META[s] || {}).typeYear || '').match(/\d{4}/) || [0])[0], 10);
-  const ordered = [...SURVEYS].sort((a, b) => yearOf(b) - yearOf(a));   // newest survey first
+  const ordered = [...availableSurveys()].sort((a, b) => yearOf(b) - yearOf(a));   // newest survey first
   list.innerHTML = ordered.map(s => {
     const info = SURVEY_META[s];
     return '<button class="surv-opt' + (s === pendingSurvey ? ' is-selected' : '') + '" data-survpick="' + esc(s) + '">' +
@@ -2806,19 +2941,28 @@ function renderSurvPicker() {
   icons();
 }
 function applySurveyChange() {
+  const first = !state.selectedSurvey;
   state.selectedSurvey = pendingSurvey;
   applyPrevious(state.selectedSurvey);
   state.treeSelected && state.treeSelected.clear && state.treeSelected.clear();
-  renderSurvSelect(); renderHistory(); updateAccSummaries();
-  if (state.view === 'linking') renderLinking();
-  toast('Now comparing with ' + surveyPlain(state.selectedSurvey));
+  syncScenarioUI();
+  toast((first ? 'Comparing with ' : 'Now comparing with ') + surveyPlain(state.selectedSurvey));
 }
 function updateAccSummaries() {
-  const sSel = $('#accSelectSummary'); if (sSel) sSel.innerHTML = surveyHTML(state.selectedSurvey);
+  // with nothing to select, the step is a statement rather than an instruction
+  const tSel = $('#accSelectTitle');
+  if (tSel) tSel.textContent = state.prevAvailable ? 'Select a survey to compare with' : 'Survey to compare with';
+  const sSel = $('#accSelectSummary');
+  if (sSel) sSel.innerHTML = state.selectedSurvey ? surveyHTML(state.selectedSurvey)
+    : (state.prevAvailable ? 'No survey selected yet' : 'No earlier survey to compare with');
   const sLink = $('#accLinkSummary');
-  if (sLink) { const p = structProgress(state.treeStructure); sLink.textContent = p.linked + ' of ' + p.total + ' linked · ' + p.suggested + ' suggestion' + (p.suggested === 1 ? '' : 's'); }
+  if (sLink) {
+    if (linkingBlocked()) sLink.textContent = '';
+    else { const p = structProgress(state.treeStructure); sLink.textContent = p.linked + ' of ' + p.total + ' linked · ' + p.suggested + ' suggestion' + (p.suggested === 1 ? '' : 's'); }
+  }
 }
 function openAcc(which, open) {
+  if (which === 'link' && open && linkingBlocked()) return;   // step 2 is not reachable yet
   const el = $('#acc-' + which); if (!el) return;
   el.classList.toggle('is-open', open);
   if (!open) el.classList.remove('is-settled');   // re-clip so the collapse animation stays contained
@@ -2854,7 +2998,11 @@ document.addEventListener('click', (e) => {
   const pick = e.target.closest && e.target.closest('[data-survpick]');
   if (pick) { pendingSurvey = pick.dataset.survpick; renderSurvPicker(); return; }
   if (e.target.closest && e.target.closest('#survPickerConfirm')) {
-    if (pendingSurvey && pendingSurvey !== state.selectedSurvey) {
+    if (pendingSurvey && !state.selectedSurvey) {
+      // nothing was linked yet, so there is nothing to lose — apply straight away
+      closeOverlays();
+      applySurveyChange();
+    } else if (pendingSurvey && pendingSurvey !== state.selectedSurvey) {
       // changing the survey clears the current links — confirm first
       closeOverlays();
       const nm = $('#survWarnName'); if (nm) nm.textContent = pendingSurvey;
@@ -2881,9 +3029,19 @@ document.addEventListener('click', (e) => {
 /* ═══════════════ OVERVIEW RENDER ═══════════════ */
 
 function renderOverview() {
-  const c = treeStatusCounts();  // real counts for the primary structure
-  $('#ovLinkSub').textContent = c.linked + ' of ' + c.total + ' groups linked';
-  $('#ovLinkAction').innerHTML = (c.suggested > 0 ? esc(c.suggested + ' to review') : 'All linked') + ' <i data-icon="chevron-right"></i>';
+  const sub = $('#ovLinkSub'), act = $('#ovLinkAction');
+  if (!sub || !act) return;
+  if (!state.prevAvailable) {
+    sub.textContent = 'Available once you have an earlier survey to compare with';
+    act.innerHTML = 'View <i data-icon="chevron-right"></i>';
+  } else if (!state.selectedSurvey) {
+    sub.textContent = 'No previous survey selected';
+    act.innerHTML = 'Select survey <i data-icon="chevron-right"></i>';
+  } else {
+    const c = treeStatusCounts();  // real counts for the primary structure
+    sub.textContent = c.linked + ' of ' + c.total + ' groups linked';
+    act.innerHTML = (c.suggested > 0 ? esc(c.suggested + ' to review') : 'All linked') + ' <i data-icon="chevron-right"></i>';
+  }
   icons();
 }
 
@@ -2895,6 +3053,7 @@ function openSuggestions() {
 
 function renderLinking() {
   renderSurvSelect();
+  if (linkingBlocked()) { updateAccSummaries(); icons(); return; }   // step 2 stays closed and empty
   renderStructCards();
   renderCards();
   renderTree();
@@ -3337,6 +3496,14 @@ $('#historyToggle') && $('#historyToggle').addEventListener('click', () => {
 function renderHistory() {
   const el = $('#historyChain'); if (!el) return;
   const sel = state.selectedSurvey;
+  // without a comparison there is no chain to show, so the disclosure goes away entirely
+  const tog = $('#historyToggle'); if (tog) tog.hidden = !sel;
+  if (!sel) {
+    const panel = $('#historyPanel'); if (panel) panel.hidden = true;
+    if (tog) tog.setAttribute('aria-expanded', 'false');
+    el.innerHTML = '';
+    return;
+  }
   const items = [
     { name: CURRENT_SURVEY, meta: 'Pulse survey · July 2026', role: 'current', tag: 'This survey', tagCls: 'is-match' },
     { name: sel, meta: (SURVEY_META[sel] && SURVEY_META[sel].typeYear) || '', role: 'comparing', tag: 'Comparing with', tagCls: 'is-linked' },
@@ -5179,6 +5346,80 @@ document.addEventListener('click', (e) => {
   if (e.target.closest && e.target.closest('#onbReopen')) { setExplainer(true); return; }
 });
 
+/* ═══════════════ DEVELOPER PANEL ═══════════════ */
+// Not product UI: a way to drop the prototype straight into a state that is otherwise hard to
+// reach. Hidden until ⌘/Ctrl + . is pressed, so screenshots of the page stay clean.
+const DEV_SHORTCUT_LABEL = (navigator.platform || '').indexOf('Mac') === 0 ? '\u2318' : 'Ctrl';
+function buildDevPanel() {
+  if ($('#glDev')) return;
+  const el = document.createElement('div');
+  el.className = 'gl-dev';
+  el.id = 'glDev';
+  el.hidden = true;
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', 'Developer panel');
+  el.innerHTML =
+    '<div class="gl-dev-head">' +
+      '<span class="gl-dev-title">Developer panel</span>' +
+      '<button class="gl-dev-x" id="glDevClose" aria-label="Close developer panel"><i data-icon="cross"></i></button>' +
+    '</div>' +
+    '<div class="gl-dev-body" id="glDevBody"></div>' +
+    '<div class="gl-dev-foot">Toggle with <kbd>' + DEV_SHORTCUT_LABEL + '</kbd> + <kbd>.</kbd> or <kbd>d</kbd> <kbd>d</kbd></div>';
+  document.body.appendChild(el);
+}
+function renderDevPanel() {
+  const body = $('#glDevBody'); if (!body) return;
+  body.innerHTML = '<div class="gl-dev-label">Scenario</div>' + SCENARIOS.map(sc =>
+    '<button class="gl-dev-opt' + (sc.key === state.scenario ? ' is-on' : '') + '" data-scenario="' + sc.key + '"' +
+      ' aria-pressed="' + (sc.key === state.scenario) + '">' +
+      '<span class="gl-dev-radio" aria-hidden="true"></span>' +
+      '<span class="gl-dev-opt-body">' +
+        '<span class="gl-dev-opt-name">' + esc(sc.label) + '</span>' +
+        '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
+      '</span>' +
+    '</button>').join('');
+  icons();
+}
+function setDevPanel(open) {
+  buildDevPanel();
+  const el = $('#glDev'); if (!el) return;
+  el.hidden = !open;
+  if (open) { renderDevPanel(); const first = el.querySelector('.gl-dev-opt'); if (first) first.focus(); }
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest) return;
+  const opt = e.target.closest('[data-scenario]');
+  if (opt) { applyScenario(opt.dataset.scenario); return; }
+  if (e.target.closest('#glDevClose')) setDevPanel(false);
+});
+function inTextField(t) {
+  if (!t || !t.tagName) return false;
+  return t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable;
+}
+// "d d" as well as the modifier combo: a double tap can't be hit by accident while reading,
+// and unlike ⌘/Ctrl + . it survives keyboards and browsers that swallow the combo.
+var lastD = 0;
+document.addEventListener('keydown', (e) => {
+  const combo = (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key === '.';
+  let doubleTap = false;
+  if ((e.key === 'd' || e.key === 'D') && !e.metaKey && !e.ctrlKey && !e.altKey && !inTextField(e.target)) {
+    const now = (window.performance && performance.now) ? performance.now() : 0;
+    doubleTap = now - lastD < 500;
+    lastD = doubleTap ? 0 : now;
+  }
+  if (combo || doubleTap) {
+    e.preventDefault();
+    const el = $('#glDev');
+    setDevPanel(!el || el.hidden);
+    return;
+  }
+  // Escape belongs to whatever dialog is on top; the panel only claims it when nothing else is open
+  if (e.key === 'Escape') {
+    const el = $('#glDev');
+    if (el && !el.hidden && !document.querySelector('.overlay:not([hidden])')) { setDevPanel(false); e.stopPropagation(); }
+  }
+}, true);
+
 /* ═══════════════ INIT ═══════════════ */
 // The current structure starts fully expanded.
 renderCrumb();
@@ -5191,21 +5432,36 @@ if (!location.hash) history.replaceState(null, '', location.pathname + location.
 setView(viewFromHash());   // open the view named in the URL (#overview or #previous-survey-links)
 
 // overview tips carousel — page through the tips stuck to the bottom of the timeline card
+// a scenario can take tips out of rotation, so syncTips() is callable from outside
+var syncTips = function () {};
 (function setupOvTips() {
   const track = document.getElementById('ovTipsTrack');
   const dotsWrap = document.getElementById('ovTipsDots');
   if (!track || !dotsWrap) return;
-  const items = [...track.querySelectorAll('.ov-tip-item')];
+  const all = [...track.querySelectorAll('.ov-tip-item')];
+  let items = all.slice();      // the tips currently in rotation
   let idx = 0;
   // a mechanism to stop the rotation is required once it moves on its own (WCAG 2.2.2)
-  dotsWrap.innerHTML = items.map((_, i) =>
-    '<button class="ov-tip-dot' + (i === 0 ? ' is-active' : '') + '" data-tipdot="' + i + '" aria-label="Tip ' + (i + 1) + ' of ' + items.length + '"></button>').join('') +
+  dotsWrap.innerHTML = all.map((_, i) =>
+    '<button class="ov-tip-dot' + (i === 0 ? ' is-active' : '') + '" data-tipdot="' + i + '" aria-label="Tip ' + (i + 1) + ' of ' + all.length + '"></button>').join('') +
     '<div class="tt-demo"><button class="ov-tips-pause" id="ovTipsPause" aria-label="Pause tips"><i data-icon="pause"></i></button><div class="tooltip is-above">Pause tips</div></div>';
   const dots = [...dotsWrap.querySelectorAll('.ov-tip-dot')];
   const show = (n) => {
+    if (!items.length) return;
     idx = (n + items.length) % items.length;
-    items.forEach((it, i) => it.classList.toggle('is-active', i === idx));
-    dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+    const cur = items[idx];
+    all.forEach(it => it.classList.toggle('is-active', it === cur));
+    dots.forEach((d, i) => d.classList.toggle('is-active', all[i] === cur));
+  };
+  // a tip that sends you off to link a previous survey is noise when there is none
+  syncTips = function () {
+    items = all.filter(it => !(it.dataset.tipNeeds === 'prev' && !state.prevAvailable));
+    dots.forEach((d, i) => {
+      const pos = items.indexOf(all[i]);
+      d.hidden = pos < 0;
+      if (pos >= 0) d.setAttribute('aria-label', 'Tip ' + (pos + 1) + ' of ' + items.length);
+    });
+    show(0);
   };
   // auto-advance every 8s; pause on hover and on focus, reset the clock on manual navigation
   let timer = null;
@@ -5215,7 +5471,7 @@ setView(viewFromHash());   // open the view named in the URL (#overview or #prev
   const bump = () => { stop(); start(); };
   document.querySelectorAll('[data-tipnav]').forEach(b =>
     b.addEventListener('click', () => { show(idx + (b.dataset.tipnav === 'next' ? 1 : -1)); bump(); }));
-  dots.forEach(d => d.addEventListener('click', () => { show(+d.dataset.tipdot); bump(); }));
+  dots.forEach(d => d.addEventListener('click', () => { show(items.indexOf(all[+d.dataset.tipdot])); bump(); }));
   track.querySelectorAll('.ov-tip-cta[data-goto]').forEach(b => b.addEventListener('click', () => goToView(b.dataset.goto)));
   const strip = document.querySelector('.ov-tips');
   if (strip) {
@@ -5234,9 +5490,16 @@ setView(viewFromHash());   // open the view named in the URL (#overview or #prev
     if (tip) tip.textContent = paused ? 'Play tips' : 'Pause tips';
     icons();
   });
-  show(0);
+  syncTips();
   start();
 })();
+
+// ?scenario=<key> boots straight into an edge case, so one can be shared as a link
+buildDevPanel();
+const bootScenario = new URLSearchParams(location.search).get('scenario');
+if (bootScenario && SCENARIOS.some(sc => sc.key === bootScenario)) applyScenario(bootScenario);
+else syncScenarioUI();
+if (new URLSearchParams(location.search).get('dev') === '1') setDevPanel(true);
 
 icons();
 </script>
