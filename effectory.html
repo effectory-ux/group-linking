@@ -986,17 +986,14 @@
     .ss-cmp-card.is-blank .ss-cmp-name { color: var(--content-secondary); font-weight: 500; }
     .ss-cmp-card.is-blank .ss-cmp-tag { color: var(--content-subtle); }
 
-    /* ── Edge case: nothing to link with at all (first survey) ── */
-    .gl-noprev { display: flex; align-items: flex-start; gap: var(--spacing-base); padding: var(--spacing-loose); margin-top: var(--spacing-base); background: var(--bg-secondary); border: 1px solid var(--border-base); border-radius: var(--radius-lg); }
-    .gl-noprev-icon { flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; background: var(--bg-info-subtle); color: var(--content-info); }
-    .gl-noprev-icon i { width: 20px; height: 20px; display: flex; }
-    .gl-noprev-title { font-size: 16px; font-weight: 600; color: var(--content-base); }
-    .gl-noprev-text { font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin: var(--spacing-extra-tight) 0 0; }
-    .gl-noprev-foot { margin-top: var(--spacing-base); }
-    /* .link-inline is a text-only component in the design system, so it sizes no icon of its own */
-    .gl-noprev-foot .link-inline { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); }
-    .gl-noprev-foot .link-inline i { width: 16px; height: 16px; display: flex; flex-shrink: 0; }
-    @media (max-width: 640px) { .gl-noprev { flex-direction: column; } }
+    /* ── Edge case: nothing to link with at all (first survey) ──
+       No design-system empty state exists yet, so this is composed from primitives. */
+    .gl-nolink { max-width: 480px; margin: 0 auto; padding: var(--spacing-super-loose) var(--spacing-loose); text-align: center; }
+    .gl-nolink[hidden] { display: none; }
+    .gl-nolink-art { width: 200px; max-width: 100%; height: auto; margin: 0 auto var(--spacing-loose); display: block; }
+    .gl-nolink-title { font-size: 20px; font-weight: 600; line-height: 28px; color: var(--content-base); margin: 0; }
+    .gl-nolink-text { font-size: 14px; line-height: 1.6; color: var(--content-secondary); margin: var(--spacing-tight) 0 var(--spacing-loose); }
+    .gl-nolink .btn i { width: 16px; height: 16px; display: flex; flex-shrink: 0; }
 
     /* ── Edge case: step 2 cannot be opened yet ── */
     .acc.is-blocked .acc-head { cursor: not-allowed; }
@@ -1290,13 +1287,21 @@
           </div>
         </div></div>
 
+        <!-- Edge case: the first survey in the account has nothing to link with -->
+        <div class="gl-nolink" id="glNoLink" hidden>
+          <img class="gl-nolink-art" src="https://effectory-ux.github.io/Engage-Design-system-/assets/illustrations/group-linking-explainer.png" alt="" />
+          <h2 class="gl-nolink-title">You can’t link a previous survey yet</h2>
+          <p class="gl-nolink-text">This is the first survey in your account, so there’s nothing to compare it with. Once this survey closes, you can link the next survey to it, and the trend lines start from there.</p>
+          <a class="btn btn-secondary" href="https://support.effectory.com/" target="_blank" rel="noopener noreferrer">Learn more about previous survey links <i data-icon="external-link"></i></a>
+        </div>
+
         <!-- Accordion step 1: select a survey -->
-        <h2 class="sr-only">Step 1: select a survey to compare with</h2>
+        <h2 class="sr-only" data-step-heading>Step 1: select a survey to compare with</h2>
         <div class="acc" id="acc-select">
           <button class="acc-head" data-acctoggle="select" aria-expanded="false">
             <span class="acc-num">1</span>
             <span class="acc-head-text">
-              <span class="acc-title" id="accSelectTitle">Select a survey to compare with</span>
+              <span class="acc-title">Select a survey to compare with</span>
               <span class="acc-summary" id="accSelectSummary"></span>
             </span>
             <i class="acc-chev" data-icon="chevron-down"></i>
@@ -1306,7 +1311,6 @@
             <div class="ss-layout">
               <div class="ss-main">
                 <div class="ss-field">
-                  <div id="ssHasPrev">
                   <p class="ss-help" id="ssHelp">We’ve auto-selected the most recent completed survey in this project to compare against. Its scores appear next to this survey’s, so you can see how each group has changed. Change it if you’d rather compare with another survey.</p>
                   <div class="ss-compare">
                     <div class="ss-cmp-card">
@@ -1332,17 +1336,6 @@
                     <button class="btn btn-tertiary gl-hist-toggle" id="historyToggle" aria-expanded="false">View survey links <i data-icon="chevron-down"></i></button>
                     <button class="btn btn-primary" id="ssContinueBtn">Continue to linking <i data-icon="arrow-right"></i></button>
                   </div>
-                  </div><!-- /ssHasPrev -->
-
-                  <!-- Edge case: this is the first survey, so there is nothing to compare with yet -->
-                  <div class="gl-noprev" id="ssNoPrev" hidden>
-                    <div class="gl-noprev-icon"><i data-icon="info"></i></div>
-                    <div>
-                      <div class="gl-noprev-title">This is your first survey</div>
-                      <p class="gl-noprev-text">Linking compares this survey with an earlier one, and there is no completed survey in your account yet. Once this survey closes you can link the next one to it, and the trend lines start from there.</p>
-                      <div class="gl-noprev-foot"><a class="link-inline" href="https://support.effectory.com/" target="_blank" rel="noopener noreferrer">How linking works <i data-icon="external-link"></i></a></div>
-                    </div>
-                  </div>
                 </div>
               </div>
               <div class="gl-history" id="historyPanel" hidden>
@@ -1355,7 +1348,7 @@
         </div>
 
         <!-- Accordion step 2: link the groups -->
-        <h2 class="sr-only">Step 2: link the groups from both surveys</h2>
+        <h2 class="sr-only" data-step-heading>Step 2: link the groups from both surveys</h2>
         <div class="acc" id="acc-link">
           <button class="acc-head" data-acctoggle="link" aria-expanded="false">
             <span class="acc-num">2</span>
@@ -2383,8 +2376,13 @@ function syncScenarioUI() {
   if (note) note.innerHTML = '<i data-icon="lock"></i> ' + (state.prevAvailable
     ? 'Select a survey in step 1 first.'
     : 'Available once you have a completed survey to compare with.');
-  const has = $('#ssHasPrev'); if (has) has.hidden = !state.prevAvailable;
-  const none = $('#ssNoPrev'); if (none) none.hidden = state.prevAvailable;
+  // with no earlier survey at all, the two-step flow has nothing to offer: the page
+  // becomes a single empty state instead of a stepper you can never complete
+  const nolink = $('#glNoLink'); if (nolink) nolink.hidden = state.prevAvailable;
+  ['#acc-select', '#acc-link'].forEach(sel => { const el = $(sel); if (el) el.hidden = !state.prevAvailable; });
+  document.querySelectorAll('[data-step-heading]').forEach(h => { h.hidden = !state.prevAvailable; });
+  const expl = $('#glExplainerWrap'); if (expl) expl.hidden = !state.prevAvailable;
+  const desc = $('#glHeadDescWrap'); if (desc) desc.hidden = !state.prevAvailable;
   renderSurvSelect();
   updateAccSummaries();
   renderOverview();
@@ -2457,9 +2455,6 @@ function applySurveyChange() {
   toast((first ? 'Comparing with ' : 'Now comparing with ') + surveyPlain(state.selectedSurvey));
 }
 function updateAccSummaries() {
-  // with nothing to select, the step is a statement rather than an instruction
-  const tSel = $('#accSelectTitle');
-  if (tSel) tSel.textContent = state.prevAvailable ? 'Select a survey to compare with' : 'Survey to compare with';
   const sSel = $('#accSelectSummary');
   if (sSel) sSel.innerHTML = state.selectedSurvey ? surveyHTML(state.selectedSurvey)
     : (state.prevAvailable ? 'No survey selected yet' : 'No earlier survey to compare with');
