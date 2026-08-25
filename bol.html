@@ -3827,8 +3827,12 @@ function linkColumns(n, sug) {
     const nested = chain.length > 1;
     const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '" tabindex="0"' : '';
     // spell out the path the "… ›" hides, so a screen reader is not left with an ellipsis
-    const nameHTML = (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span>' : '') +
-      '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '<span aria-hidden="true">… › </span>' : '') + hlName(l.name) + '</span>';
+    // the ancestors go INSIDE the focusable name, so its accessible name is the whole path. As a
+    // sibling they were only met by a reading cursor travelling past them: tabbing straight to the
+    // name announced "Customer Growth" with no hint of where it sits, which is what the popover says.
+    const nameHTML = '<span class="tr-lrow-name"' + pathAttr + '>' +
+      (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span><span aria-hidden="true">… › </span>' : '') +
+      hlName(l.name) + '</span>';
     const mainInner = originTag + nameHTML + countBadge;
     // The connector line is decorative, so the relationship it draws has to be said in words:
     // landing on this group on its own would otherwise never reveal whether it is an established
