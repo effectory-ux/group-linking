@@ -794,12 +794,16 @@
     .tr-lrow.is-suggested .tr-lrow-icon { color: var(--content-info); }
     .tr-origin { display: flex; align-items: center; flex-shrink: 0; }
     /* both are tooltip triggers rather than controls, so they carry the focus ring themselves */
-    .tr-origin:focus-visible, .tr-lrow-name[tabindex]:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
+    .tr-origin:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
     .tr-origin i { width: 14px; height: 14px; display: flex; }
     .tr-origin.is-auto { color: var(--content-subtle); }
     .tr-origin.is-manual { color: var(--content-brand); }
     .tr-origin.is-suggested { color: var(--content-info); }
     .tr-lrow-name { font-weight: 500; color: var(--content-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    /* the nested ones are buttons that disclose the group's path, and must look like the plain text
+       ones beside them */
+    button.tr-lrow-name { font-family: inherit; font-size: inherit; line-height: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: left; display: block; cursor: pointer; }
+    button.tr-lrow-name:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
     .tr-lrow-act { display: flex; align-items: center; gap: var(--spacing-extra-tight); flex-shrink: 0; }
     .tr-lrow-act .tr-conf-badge { margin-right: var(--spacing-extra-tight); }
     .tr-act-btn { width: 30px; height: 30px; border-radius: var(--radius-base); } .tr-act-btn svg { width: 16px; height: 16px; }
@@ -3825,14 +3829,18 @@ function linkColumns(n, sug) {
         : '<div class="tt-demo tr-origin is-auto" tabindex="0" role="img" aria-label="Linked automatically"><i data-icon="zap"></i><div class="tooltip is-above">Linked automatically</div></div>');
     const chain = prevPath(l.name);
     const nested = chain.length > 1;
-    const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '" tabindex="0"' : '';
+    const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '" aria-expanded="false" aria-controls="pathPop"' : '';
     // spell out the path the "… ›" hides, so a screen reader is not left with an ellipsis
     // the ancestors go INSIDE the focusable name, so its accessible name is the whole path. As a
     // sibling they were only met by a reading cursor travelling past them: tabbing straight to the
     // name announced "Customer Growth" with no hint of where it sits, which is what the popover says.
-    const nameHTML = '<span class="tr-lrow-name"' + pathAttr + '>' +
+    // a button names itself from its content, so the ancestors inside it become part of that name.
+    // A focusable span could not: role generic takes no name from its contents, so focus landed on
+    // a nameless node.
+    const nameTag = nested ? 'button' : 'span';
+    const nameHTML = '<' + nameTag + ' class="tr-lrow-name"' + (nested ? ' type="button"' : '') + pathAttr + '>' +
       (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span><span aria-hidden="true">… › </span>' : '') +
-      hlName(l.name) + '</span>';
+      hlName(l.name) + '</' + nameTag + '>';
     const mainInner = originTag + nameHTML + countBadge;
     // The connector line is decorative, so the relationship it draws has to be said in words:
     // landing on this group on its own would otherwise never reveal whether it is an established
@@ -4381,23 +4389,37 @@ document.addEventListener('mouseout', (e) => {
     pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pw - 8)) + 'px';
     pop.style.top = top + 'px';
   };
+  let openBy = null;
+  const close = () => {
+    pop.hidden = true;
+    if (openBy) { openBy.setAttribute('aria-expanded', 'false'); openBy = null; }
+  };
   document.addEventListener('mouseover', (e) => {
     const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
     if (el) show(el);
   });
+  // click and Enter/Space toggle it and hold it open, so it is not a mouse-only reveal
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest && e.target.closest('button.tr-lrow-name[data-path]');
+    if (!el) return;
+    e.stopPropagation();
+    if (openBy === el) { close(); return; }
+    close(); show(el); openBy = el; el.setAttribute('aria-expanded', 'true');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !pop.hidden) { close(); e.stopPropagation(); }
+  }, true);
   // the path was mouse-only; keyboard focus reveals it too, and Escape dismisses it (WCAG 1.4.13)
   document.addEventListener('focusin', (e) => {
     const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
-    if (el) show(el); else pop.hidden = true;
+    if (el) show(el); else close();
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !pop.hidden) { pop.hidden = true; e.stopPropagation(); }
-  }, true);
   document.addEventListener('mouseout', (e) => {
     const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
     if (!el) return;
     const to = e.relatedTarget;
     if (to && to.closest && to.closest('.tr-lrow-name[data-path]') === el) return;
+    if (openBy) return;               // held open by a click; only Escape or leaving closes it
     pop.hidden = true;
   });
   document.addEventListener('scroll', () => { pop.hidden = true; }, true);
