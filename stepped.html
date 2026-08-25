@@ -3499,21 +3499,23 @@ function linkColumns(n, sug) {
       ? '<button class="tr-count is-ovclick" data-matchpop="' + sug.id + '" data-ovclick="1" aria-label="' + size + ' participants. See member overlap"><i data-icon="users"></i>' + size + '</button>'
       : '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(l.name) + '" data-size="' + size + '" data-survey="' + esc(state.selectedSurvey) + '" aria-label="View ' + size + ' participants in ' + esc(l.name) + '"><i data-icon="users"></i>' + size + '</button><div class="tooltip is-above">View participants</div></div>');
     const originTag = isS
-      ? '<div class="tt-demo tr-origin is-suggested" role="img" aria-label="Suggested link"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
+      ? '<div class="tt-demo tr-origin is-suggested" aria-hidden="true"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
       : (l.origin === 'manual'
-        ? '<div class="tt-demo tr-origin is-manual" role="img" aria-label="Linked manually"><i data-icon="user-check"></i><div class="tooltip is-above">Linked manually</div></div>'
-        : '<div class="tt-demo tr-origin is-auto" role="img" aria-label="Linked automatically"><i data-icon="zap"></i><div class="tooltip is-above">Linked automatically</div></div>');
+        ? '<div class="tt-demo tr-origin is-manual" aria-hidden="true"><i data-icon="user-check"></i><div class="tooltip is-above">Linked manually</div></div>'
+        : '<div class="tt-demo tr-origin is-auto" aria-hidden="true"><i data-icon="zap"></i><div class="tooltip is-above">Linked automatically</div></div>');
     const chain = prevPath(l.name);
     const nested = chain.length > 1;
     const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '"' : '';
     // spell out the path the "… ›" hides, so a screen reader is not left with an ellipsis
     const nameHTML = (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span>' : '') +
-      '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '… › ' : '') + esc(l.name) + '</span>';
+      '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '<span aria-hidden="true">… › </span>' : '') + esc(l.name) + '</span>';
     const mainInner = originTag + nameHTML + countBadge;
     // The connector line is decorative, so the relationship it draws has to be said in words:
     // landing on this group on its own would otherwise never reveal whether it is an established
     // link or only a proposal — both read as just a group name with a number next to it.
-    const relation = '<span class="sr-only">' + (isS ? 'Suggested match with: ' : 'Linked to: ') + '</span>';
+    const relText = isS ? 'Suggested match with: '
+      : (l.origin === 'manual' ? 'Linked manually to: ' : 'Linked automatically to: ');
+    const relation = '<span class="sr-only">' + relText + '</span>';
     right += '<div class="tr-rrow" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
       '<div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
       '<span class="tr-lrow-main">' + mainInner + '</span>' +
