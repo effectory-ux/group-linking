@@ -793,6 +793,8 @@
     .tr-lrow-icon { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-subtle); }
     .tr-lrow.is-suggested .tr-lrow-icon { color: var(--content-info); }
     .tr-origin { display: flex; align-items: center; flex-shrink: 0; }
+    /* both are tooltip triggers rather than controls, so they carry the focus ring themselves */
+    .tr-origin:focus-visible, .tr-lrow-name[tabindex]:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
     .tr-origin i { width: 14px; height: 14px; display: flex; }
     .tr-origin.is-auto { color: var(--content-subtle); }
     .tr-origin.is-manual { color: var(--content-brand); }
@@ -3817,13 +3819,13 @@ function linkColumns(n, sug) {
       ? '<button class="tr-count is-ovclick" data-matchpop="' + sug.id + '" data-ovclick="1" aria-label="' + size + ' participants in ' + esc(l.name) + '. Compare group members"><i data-icon="users"></i>' + size + '</button>'
       : '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(l.name) + '" data-size="' + size + '" data-survey="' + esc(state.selectedSurvey) + '" aria-label="View ' + size + ' participants in ' + esc(l.name) + '"><i data-icon="users"></i>' + size + '</button><div class="tooltip is-above">View participants</div></div>');
     const originTag = isS
-      ? '<div class="tt-demo tr-origin is-suggested" aria-hidden="true"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
+      ? '<div class="tt-demo tr-origin is-suggested" tabindex="0" role="img" aria-label="Suggested link"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
       : (l.origin === 'manual'
-        ? '<div class="tt-demo tr-origin is-manual" aria-hidden="true"><i data-icon="user-check"></i><div class="tooltip is-above">Linked manually</div></div>'
-        : '<div class="tt-demo tr-origin is-auto" aria-hidden="true"><i data-icon="zap"></i><div class="tooltip is-above">Linked automatically</div></div>');
+        ? '<div class="tt-demo tr-origin is-manual" tabindex="0" role="img" aria-label="Linked manually"><i data-icon="user-check"></i><div class="tooltip is-above">Linked manually</div></div>'
+        : '<div class="tt-demo tr-origin is-auto" tabindex="0" role="img" aria-label="Linked automatically"><i data-icon="zap"></i><div class="tooltip is-above">Linked automatically</div></div>');
     const chain = prevPath(l.name);
     const nested = chain.length > 1;
-    const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '"' : '';
+    const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '" tabindex="0"' : '';
     // spell out the path the "… ›" hides, so a screen reader is not left with an ellipsis
     const nameHTML = (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span>' : '') +
       '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '<span aria-hidden="true">… › </span>' : '') + hlName(l.name) + '</span>';
@@ -3831,8 +3833,7 @@ function linkColumns(n, sug) {
     // The connector line is decorative, so the relationship it draws has to be said in words:
     // landing on this group on its own would otherwise never reveal whether it is an established
     // link or only a proposal — both read as just a group name with a number next to it.
-    const relText = isS ? 'Suggested match with: '
-      : (l.origin === 'manual' ? 'Linked manually to: ' : 'Linked automatically to: ');
+    const relText = isS ? 'Possible match: ' : 'Connected to: ';
     const relation = '<span class="sr-only">' + relText + '</span>';
     list += '<div class="tr-rrow" role="listitem" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
       '<div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
@@ -4380,6 +4381,14 @@ document.addEventListener('mouseout', (e) => {
     const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
     if (el) show(el);
   });
+  // the path was mouse-only; keyboard focus reveals it too, and Escape dismisses it (WCAG 1.4.13)
+  document.addEventListener('focusin', (e) => {
+    const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
+    if (el) show(el); else pop.hidden = true;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !pop.hidden) { pop.hidden = true; e.stopPropagation(); }
+  }, true);
   document.addEventListener('mouseout', (e) => {
     const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
     if (!el) return;
@@ -5161,6 +5170,8 @@ var showMatchPop = null;
     lastTip = tip;
     tip.style.opacity = '';   // clear any scroll-hide so hover can show it again
     tip.style.position = 'fixed'; tip.style.margin = '0'; tip.style.transform = 'none';
+    // once placed against the viewport it has to clear the sticky column header, which sits at 20
+    tip.style.zIndex = '150';
     tip.style.left = '0'; tip.style.top = '0'; tip.style.right = 'auto'; tip.style.bottom = 'auto'; tip.style.height = 'auto';
     const t = demo.getBoundingClientRect();
     const tw = tip.offsetWidth, th = tip.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
