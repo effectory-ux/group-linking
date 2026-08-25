@@ -715,6 +715,8 @@
 
     /* right column: previous-survey link cards */
     .tr-card-right { display: flex; flex-direction: column; gap: var(--spacing-tight); min-width: 0; }
+    /* the connected groups are a list inside the cell; it must not change their spacing */
+    .tr-rlist { display: flex; flex-direction: column; gap: var(--spacing-tight); min-width: 0; }
     .tr-rrow { display: flex; align-items: center; min-width: 0; }
     .tr-lrow { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-tight); border: 1px solid var(--border-base); border-radius: var(--radius-md); background: var(--bg-base); padding: var(--spacing-tight) var(--spacing-base-tight); font-size: 14px; min-height: 50px; transition: border-color var(--motion-fast) var(--ease-out); }
     .tr-lrow.is-suggested { background: var(--bg-info-subtle); border-color: var(--border-info); }
@@ -3404,7 +3406,7 @@ function rowSummary(n) {
   return dot(esc(n.name) + ' ' + parts.join(', and '));
 }
 
-function treeRowHTML(n, level) {
+function treeRowHTML(n, level, ancestors) {
   const hasChildren = n.children && n.children.length > 0;
   const isOpen = !state.treeCollapsed.has(n.id) || !!state.treeSearch;
   const sug = suggestionForNode(n);
@@ -3426,6 +3428,7 @@ function treeRowHTML(n, level) {
     (hasChildren
       ? '<button class="tr-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="tr-toggle-spacer"></span>') +
+    ((ancestors && ancestors.length) ? '<span class="sr-only">' + esc(ancestors.join(', ')) + ', </span>' : '') +
     '<span class="tr-group">' + esc(n.name) + '</span>' +
     (n.size ? '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(n.name) + '" data-size="' + n.size + '" data-survey="' + esc(CURRENT_SURVEY) + '" aria-label="View ' + n.size + ' participants in ' + esc(n.name) + '"><i data-icon="users"></i>' + n.size + '</button><div class="tooltip is-above">View participants</div></div>' : '') +
     '</div>' +
@@ -3440,7 +3443,7 @@ function treeRowHTML(n, level) {
   if (hasChildren) {
     // transparent to assistive tech: the cards inside are list items of the tree, not of a sub-list
     html += '<div class="tr-children' + (isOpen ? '' : ' is-collapsed') + '" role="presentation" data-childrenof="' + esc(n.id) + '">' +
-      n.children.map(c => treeRowHTML(c, level + 1)).join('') + '</div>';
+      n.children.map(c => treeRowHTML(c, level + 1, (ancestors || []).concat(n.name))).join('') + '</div>';
   }
   return html;
 }
@@ -3486,7 +3489,7 @@ function linkColumns(n, sug) {
       '</div></div>';
     return { mid: '<svg class="tr-conn-svg" preserveAspectRatio="none" aria-hidden="true"></svg>', right };
   }
-  let right = '';
+  let list = '';
   n.links.forEach(l => {
     const hg = histGroups().find(g => g.name === l.name);
     const size = hg ? hg.size : (l.size || '');
@@ -3498,7 +3501,7 @@ function linkColumns(n, sug) {
       : '<div class="tt-demo"><button class="tr-lrow-x" data-treeunlink="' + esc(n.id) + '|' + esc(l.name) + '" aria-label="Remove link"><i data-icon="cross"></i></button><div class="tooltip is-above">Remove link</div></div>';
     // group size count, plus the overlap badge on suggested rows
     const countBadge = size === '' ? '' : (isS
-      ? '<button class="tr-count is-ovclick" data-matchpop="' + sug.id + '" data-ovclick="1" aria-label="' + size + ' participants. See member overlap"><i data-icon="users"></i>' + size + '</button>'
+      ? '<button class="tr-count is-ovclick" data-matchpop="' + sug.id + '" data-ovclick="1" aria-label="' + size + ' participants in ' + esc(l.name) + '. Compare group members"><i data-icon="users"></i>' + size + '</button>'
       : '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(l.name) + '" data-size="' + size + '" data-survey="' + esc(state.selectedSurvey) + '" aria-label="View ' + size + ' participants in ' + esc(l.name) + '"><i data-icon="users"></i>' + size + '</button><div class="tooltip is-above">View participants</div></div>');
     const originTag = isS
       ? '<div class="tt-demo tr-origin is-suggested" aria-hidden="true"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
@@ -3518,11 +3521,14 @@ function linkColumns(n, sug) {
     const relText = isS ? 'Suggested match with: '
       : (l.origin === 'manual' ? 'Linked manually to: ' : 'Linked automatically to: ');
     const relation = '<span class="sr-only">' + relText + '</span>';
-    right += '<div class="tr-rrow" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
+    list += '<div class="tr-rrow" role="listitem" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
       '<div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
       '<span class="tr-lrow-main">' + mainInner + '</span>' +
       '<span class="tr-lrow-act">' + actions + '</span></div></div>';
   });
+  // a group can carry several matches, so they are a list; the picker and the empty slot are
+  // controls rather than list items, and stay outside it
+  let right = list ? '<div class="tr-rlist" role="list">' + list + '</div>' : '';
   // add another previous-survey link (merge) — picker appears on demand, below the links
   if (state.treeLinkingNodeId === n.id) {
     right += '<div class="tr-rrow">' + linkSearchBoxHTML() + '</div>';
@@ -3569,13 +3575,15 @@ function overlapBadgeHTML(pct, attrs, asButton) {
   const inner = '<i data-icon="user-check"></i>' + pct + '%';
   return asButton
     ? '<button type="button" class="tr-conf-badge"' + (attrs || '') + '>' + inner + '</button>'
-    : '<span class="tr-conf-badge"' + (attrs || '') + '>' + inner + '<span class="sr-only"> member overlap</span></span>';
+    : '<span class="tr-conf-badge"' + (attrs || '') + '>' + inner + '<span class="sr-only"> of members are in both groups</span></span>';
 }
 function confBadge(sug) {
   if (!sug) return '';
   const o = overlapMembers(sug);
   // a real button, so the percentage is announced as a control instead of as stray text
-  return overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" aria-label="' + o.pct + '% member overlap. See why we suggest this link"', true);
+  // this and the participant count beside it open the same "Compare group members" dialog, so
+  // both name it: two different phrasings for one destination read as two places to go
+  return overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" aria-label="' + o.pct + '% of members are in both groups. Compare group members"', true);
 }
 
 function matchPopHTML(sug) {
@@ -3682,10 +3690,13 @@ function setTreeTableRoles(on) {
     body.setAttribute('role', 'rowgroup');
     cols.setAttribute('role', 'row');
     heads.forEach(h => h.setAttribute('role', 'columnheader'));
+    // the headings are short for the eye; spell out what each column actually holds
+    if (heads[0]) heads[0].setAttribute('aria-label', 'Groups in this survey');
+    if (heads[1]) heads[1].setAttribute('aria-label', 'Connected groups from ' + surveyPlain(state.selectedSurvey || ''));
   } else {
     table.removeAttribute('role'); table.removeAttribute('aria-label');
     body.removeAttribute('role'); cols.removeAttribute('role');
-    heads.forEach(h => h.removeAttribute('role'));
+    heads.forEach(h => { h.removeAttribute('role'); h.removeAttribute('aria-label'); });
   }
 }
 function renderTree() {
@@ -3753,7 +3764,7 @@ function renderTree() {
     icons();
     return;
   }
-  body.innerHTML = data.map(n => treeRowHTML(n, 0)).join('');
+  body.innerHTML = data.map(n => treeRowHTML(n, 0, [])).join('');
 
   body.querySelectorAll('[data-treetoggle]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.treetoggle;
@@ -4344,7 +4355,7 @@ function renderTreeLinkMenu(q, menuSel) {
       chev +
       '<span class="menu-item-body"><span class="tlm-name-row"><span class="menu-item-title">' + esc(n.name) + '</span>' +
       '<span class="tr-count' + (node ? ' is-ovpop' : '') + '"' + (node ? ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"' : '') + '><i data-icon="users"></i>' + n.size + '<span class="sr-only"> participants</span></span>' +
-      (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"') : (opts.overlapPct != null ? '<span class="tlm-ov" data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> member overlap</span></span>' : '')) + '</span>' +
+      (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"') : (opts.overlapPct != null ? '<span class="tlm-ov" data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> of members are in both groups</span></span>' : '')) + '</span>' +
       '</span></div>';
   };
 
