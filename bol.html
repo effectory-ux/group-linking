@@ -986,6 +986,12 @@
     .ss-cmp-card.is-blank .ss-cmp-name { color: var(--content-secondary); font-weight: 500; }
     .ss-cmp-card.is-blank .ss-cmp-tag { color: var(--content-subtle); }
 
+    /* ── Edge case: an overview row that cannot be opened ──
+       House pattern: the row goes flat and inert, and the reason lives in a tooltip
+       rather than in a subtitle nobody reads until they wonder why. */
+    .ov-row-why { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0;
+                  background: none; border: 0; color: var(--content-secondary); cursor: help; }
+    .ov-row-why i { width: 16px; height: 16px; display: flex; }
     /* ── Edge case: nothing to link with at all (first survey) ──
        No design-system empty state exists yet, so this is composed from primitives. */
     .gl-nolink { max-width: 480px; margin: 0 auto; padding: var(--spacing-super-loose) var(--spacing-loose); text-align: center; }
@@ -2821,16 +2827,30 @@ document.addEventListener('click', (e) => {
 
 /* ═══════════════ OVERVIEW RENDER ═══════════════ */
 
+// the row carries its own interactivity, so enabling it means putting all of it back
+function setLinkRowEnabled(on) {
+  const row = $('#ovLinkRow'); if (!row) return;
+  row.classList.toggle('is-link', on);
+  if (on) { row.setAttribute('data-nav', 'linking'); row.setAttribute('role', 'link'); row.setAttribute('tabindex', '0'); }
+  else { row.removeAttribute('data-nav'); row.removeAttribute('role'); row.removeAttribute('tabindex'); }
+}
 function renderOverview() {
   const sub = $('#ovLinkSub'), act = $('#ovLinkAction');
   if (!sub || !act) return;
   if (!state.prevAvailable) {
-    sub.textContent = 'Available once you have an earlier survey to compare with';
-    act.innerHTML = 'View <i data-icon="chevron-right"></i>';
+    // nothing to link with, so the row is disabled instead of opening a page that can only say no
+    setLinkRowEnabled(false);
+    sub.textContent = '';
+    act.innerHTML = 'Not available ' +
+      '<span class="tt-demo"><button class="ov-row-why" type="button" aria-label="Why previous survey links are not available">' +
+      '<i data-icon="info"></i></button>' +
+      '<div class="tooltip is-above">Available once you have an earlier completed survey to compare with.</div></span>';
   } else if (!state.selectedSurvey) {
+    setLinkRowEnabled(true);
     sub.textContent = 'No previous survey selected';
     act.innerHTML = 'Select survey <i data-icon="chevron-right"></i>';
   } else {
+    setLinkRowEnabled(true);
     const c = treeStatusCounts();  // real counts for the primary structure
     sub.textContent = c.linked + ' of ' + c.total + ' groups linked';
     act.innerHTML = (c.suggested > 0 ? esc(c.suggested + ' to review') : 'All linked') + ' <i data-icon="chevron-right"></i>';
