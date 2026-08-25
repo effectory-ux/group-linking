@@ -1396,8 +1396,10 @@
               </div>
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
-            <div class="tr-cols"><span>Current survey</span><span id="trColPrev">Your Voice - Employee Listening ’25</span></div>
-            <div id="treeBody" role="list" aria-label="Groups in this survey"></div>
+            <div class="tr-table" id="treeTable">
+              <div class="tr-cols" id="treeCols"><span>Current survey</span><span id="trColPrev">Your Voice - Employee Listening ’25</span></div>
+              <div id="treeBody"></div>
+            </div>
             </div><!-- /tr-scope -->
           </div>
           </div></div><!-- /sacc-body-pad /sacc-body-inner -->
@@ -2228,7 +2230,9 @@ function linkProgressText() {
 }
 // The survey name carries its status as an emoji dot, which a screen reader reads out as
 // "large green circle". Keep it on screen, keep it out of the accessible name.
-const STATUS_DOT = /([\u{1F7E0}-\u{1F7EB}])\s*/u;
+// the coloured squares plus the older circle emoji, which a screen reader otherwise reads out
+// as "red circle" in the middle of every survey name
+const STATUS_DOT = /([\u{1F7E0}-\u{1F7EB}\u{1F534}\u{1F535}\u{26AA}\u{26AB}])\s*/u;
 function surveyHTML(name) { return esc(name).replace(STATUS_DOT, '<span aria-hidden="true">$1</span> '); }
 function surveyPlain(name) { return name.replace(STATUS_DOT, '').replace(/\s{2,}/g, ' ').trim(); }
 function toast(message) {
@@ -3368,7 +3372,7 @@ function trmRowHTML(n, level, hasChildren, isOpen) {
     : sugs.length ? '<span class="trm-chip is-suggested">Suggestion</span>'
     : '<span class="trm-chip is-none">No link</span>';
   const subNames = (done.length ? done : sugs).map(l => l.name).join(', ');
-  return '<div class="trm-row-wrap">' +
+  return '<div class="trm-row-wrap" role="cell">' +
     (hasChildren
       ? '<button class="trm-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="trm-toggle-spacer"></span>') +
@@ -3408,11 +3412,13 @@ function treeRowHTML(n, level) {
   const hasLinked = n.links.some(l => l.status === 'linked');
   const hasSuggested = !hasLinked && n.links.some(l => l.status === 'suggested' || l.status === 'review');
   const leftState = hasLinked ? ' is-linked' : (hasSuggested ? ' is-suggested' : '');
-  let html = '<div class="tr-card' + (n._hit ? ' is-hit' : '') + (isSel ? ' is-selected' : '') + '" role="listitem" style="--lvl: ' + level + '" data-nodeid="' + esc(n.id) + '">' +
-    '<span class="sr-only">' + rowSummary(n) + '</span>' +
+  // the row names itself, so the pairing is announced before the cells are read and does not
+  // depend on which breakpoint's cells are the visible ones
+  let html = '<div class="tr-card' + (n._hit ? ' is-hit' : '') + (isSel ? ' is-selected' : '') + '" role="row" aria-label="' + rowSummary(n) + '" style="--lvl: ' + level + '" data-nodeid="' + esc(n.id) + '">' +
     trmRowHTML(n, level, hasChildren, isOpen) +
-    '<div class="tr-card-grid">' +
-    '<div class="tr-leftcol">' +
+    // presentational, so the two cells inside it belong to the row and not to a nameless box
+    '<div class="tr-card-grid" role="presentation">' +
+    '<div class="tr-leftcol" role="cell">' +
     '<div class="tr-leftcard' + leftState + '">' +
     '<span class="tr-check' + (isSel ? ' is-checked' : '') + '" data-treecheck="' + esc(n.id) + '" role="checkbox" aria-checked="' + isSel + '" tabindex="0" aria-label="Select ' + esc(n.name) + '"><i data-icon="check"></i></span>' +
     (hasChildren
@@ -3425,8 +3431,8 @@ function treeRowHTML(n, level) {
       ? '<div class="tr-add-slot tt-demo" style="visibility:hidden"><button class="tr-add-btn" tabindex="-1"><i data-icon="plus"></i></button></div>'
       : '<div class="tr-add-slot tt-demo"><button class="tr-add-btn" data-treeadd="' + esc(n.id) + '" aria-label="' + (n.links.length ? 'Link another group' : 'Link a group') + '"><i data-icon="plus"></i></button><div class="tooltip is-below">' + (n.links.length ? 'Link another group' : 'Link a group') + '</div></div>') +
     '</div>' +
-    '<div class="tr-card-mid">' + cols.mid + '</div>' +
-    '<div class="tr-card-right">' + cols.right + '</div>' +
+    '<div class="tr-card-mid" role="presentation">' + cols.mid + '</div>' +
+    '<div class="tr-card-right" role="cell">' + cols.right + '</div>' +
     '</div></div>';
 
   if (hasChildren) {
@@ -3660,11 +3666,30 @@ function renderTreeFilterDesc() {
   el.hidden = false;
   el.innerHTML = d.html;
 }
+// A table with no rows is not a table: the empty state that replaces the rows would sit inside
+// a rowgroup, and the column headers would describe columns that are not there.
+function setTreeTableRoles(on) {
+  const table = $('#treeTable'), body = $('#treeBody'), cols = $('#treeCols');
+  if (!table || !body || !cols) return;
+  const heads = cols.querySelectorAll('span');
+  if (on) {
+    table.setAttribute('role', 'table');
+    table.setAttribute('aria-label', 'Groups in this survey and their match in ' + surveyPlain(state.selectedSurvey || ''));
+    body.setAttribute('role', 'rowgroup');
+    cols.setAttribute('role', 'row');
+    heads.forEach(h => h.setAttribute('role', 'columnheader'));
+  } else {
+    table.removeAttribute('role'); table.removeAttribute('aria-label');
+    body.removeAttribute('role'); cols.removeAttribute('role');
+    heads.forEach(h => h.removeAttribute('role'));
+  }
+}
 function renderTree() {
   renderTreeFilters();
   renderTreeFilterDesc();
   const body = $('#treeBody');
   const data = filterTree(TREES[state.treeStructure]);
+  setTreeTableRoles(data.length > 0);
   if (data.length === 0) {
     const q = state.treeSearch;
     const active = activeFilterKey();
