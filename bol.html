@@ -694,6 +694,8 @@
     .tr-toggle:not(.is-open) i { transform: rotate(-90deg); }
     .tr-toggle-spacer { width: 20px; flex-shrink: 0; }
     .tr-group { font-size: 14px; font-weight: 600; color: var(--content-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 28px; }
+    button.tr-group { font-family: inherit; line-height: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: left; cursor: pointer; }
+    button.tr-group:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
     /* 12px between the group name and its member count on both sides (row gaps are 4px left / 8px right) */
     .tr-leftcard .tr-count-wrap { margin-left: var(--spacing-tight); }
     .tr-lrow-main .tr-count-wrap { margin-left: var(--spacing-extra-tight); }
@@ -3747,8 +3749,15 @@ function treeRowHTML(n, level, ancestors) {
     (hasChildren
       ? '<button class="tr-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="tr-toggle-spacer"></span>') +
-    ((ancestors && ancestors.length) ? '<span class="sr-only">' + esc(ancestors.join(', ')) + ', </span>' : '') +
-    '<span class="tr-group">' + hlName(n.name) + '</span>' +
+    // same as the previous-survey side: with ancestors it is a button that discloses the path, which
+    // is also the only way to read a name the column has truncated
+    (function () {
+      const anc = (ancestors && ancestors.length) ? ancestors : null;
+      if (!anc) return '<span class="tr-group">' + hlName(n.name) + '</span>';
+      return '<button type="button" class="tr-group" data-path="' + esc(anc.concat(n.name).join(' › ')) +
+        '" aria-expanded="false" aria-controls="pathPop">' +
+        '<span class="sr-only">' + esc(anc.join(', ')) + ', </span>' + hlName(n.name) + '</button>';
+    })() +
     (n.size ? '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(n.name) + '" data-size="' + n.size + '" data-survey="' + esc(CURRENT_SURVEY) + '" aria-label="View ' + n.size + ' participants in ' + esc(n.name) + '"><i data-icon="users"></i>' + n.size + '</button><div class="tooltip is-above">View participants</div></div>' : '') +
     '</div>' +
     (state.treeLinkingNodeId === n.id
@@ -4395,12 +4404,12 @@ document.addEventListener('mouseout', (e) => {
     if (openBy) { openBy.setAttribute('aria-expanded', 'false'); openBy = null; }
   };
   document.addEventListener('mouseover', (e) => {
-    const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
+    const el = e.target.closest && e.target.closest('[data-path]');
     if (el) show(el);
   });
   // click and Enter/Space toggle it and hold it open, so it is not a mouse-only reveal
   document.addEventListener('click', (e) => {
-    const el = e.target.closest && e.target.closest('button.tr-lrow-name[data-path]');
+    const el = e.target.closest && e.target.closest('button[data-path]');
     if (!el) return;
     e.stopPropagation();
     if (openBy === el) { close(); return; }
@@ -4411,14 +4420,14 @@ document.addEventListener('mouseout', (e) => {
   }, true);
   // the path was mouse-only; keyboard focus reveals it too, and Escape dismisses it (WCAG 1.4.13)
   document.addEventListener('focusin', (e) => {
-    const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
+    const el = e.target.closest && e.target.closest('[data-path]');
     if (el) show(el); else close();
   });
   document.addEventListener('mouseout', (e) => {
-    const el = e.target.closest && e.target.closest('.tr-lrow-name[data-path]');
+    const el = e.target.closest && e.target.closest('[data-path]');
     if (!el) return;
     const to = e.relatedTarget;
-    if (to && to.closest && to.closest('.tr-lrow-name[data-path]') === el) return;
+    if (to && to.closest && to.closest('[data-path]') === el) return;
     if (openBy) return;               // held open by a click; only Escape or leaving closes it
     pop.hidden = true;
   });
