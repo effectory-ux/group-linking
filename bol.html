@@ -698,7 +698,8 @@
     .tr-leftcard .tr-count-wrap { margin-left: var(--spacing-tight); }
     .tr-lrow-main .tr-count-wrap { margin-left: var(--spacing-extra-tight); }
     .tr-count-wrap { flex-shrink: 0; }
-    .tr-card.is-hit .tr-group { color: var(--content-brand); }
+    .tr-hl { background: var(--bg-highlight-base); color: inherit; border-radius: var(--radius-sm); padding: 0 1px; }
+    .tlm-item.is-context .menu-item-title .tr-hl { color: var(--content-base); }
     /* count badge (blue) */
     .tr-count { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); border: 1px solid var(--border-base); background: none; color: var(--content-secondary); font-family: inherit; font-size: 12px; font-weight: 500; padding: 2px var(--spacing-tight); border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; }
     .tr-count i { width: 12px; height: 12px; display: flex; }
@@ -3667,6 +3668,19 @@ function suggestionForNode(node) {
 
 // The phone rendering of a group: one row with a status chip; tapping it opens the sheet.
 // Hidden on desktop, where the two-column grid next to it renders instead.
+// Mark the searched-for text where it actually appears. Colouring the whole left-hand name
+// pointed at the wrong thing when the row matched on its previous-survey name instead.
+function hlName(name, query) {
+  const q = (query != null ? query : state.treeSearch).trim();
+  if (!q) return esc(name);
+  const hay = name.toLowerCase(), needle = q.toLowerCase();
+  let out = '', at = 0, i;
+  while ((i = hay.indexOf(needle, at)) !== -1) {
+    out += esc(name.slice(at, i)) + '<mark class="tr-hl">' + esc(name.slice(i, i + needle.length)) + '</mark>';
+    at = i + needle.length;
+  }
+  return out + esc(name.slice(at));
+}
 function trmRowHTML(n, level, hasChildren, isOpen) {
   const isSug = l => l.status === 'suggested' || l.status === 'review';
   const done = n.links.filter(l => !isSug(l)), sugs = n.links.filter(isSug);
@@ -3680,8 +3694,8 @@ function trmRowHTML(n, level, hasChildren, isOpen) {
       ? '<button class="trm-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="trm-toggle-spacer"></span>') +
     '<button class="trm-row" data-sheet="' + esc(n.id) + '" aria-haspopup="dialog">' +
-      '<span class="trm-main"><span class="trm-name">' + esc(n.name) + '</span>' +
-      (subNames ? '<span class="trm-sub">\u2192 ' + esc(subNames) + '</span>' : '') + '</span>' +
+      '<span class="trm-main"><span class="trm-name">' + hlName(n.name) + '</span>' +
+      (subNames ? '<span class="trm-sub">\u2192 ' + hlName(subNames) + '</span>' : '') + '</span>' +
       chip + '<i class="trm-chev" data-icon="chevron-right" aria-hidden="true"></i></button></div>';
 }
 
@@ -3728,7 +3742,7 @@ function treeRowHTML(n, level, ancestors) {
       ? '<button class="tr-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="tr-toggle-spacer"></span>') +
     ((ancestors && ancestors.length) ? '<span class="sr-only">' + esc(ancestors.join(', ')) + ', </span>' : '') +
-    '<span class="tr-group">' + esc(n.name) + '</span>' +
+    '<span class="tr-group">' + hlName(n.name) + '</span>' +
     (n.size ? '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(n.name) + '" data-size="' + n.size + '" data-survey="' + esc(CURRENT_SURVEY) + '" aria-label="View ' + n.size + ' participants in ' + esc(n.name) + '"><i data-icon="users"></i>' + n.size + '</button><div class="tooltip is-above">View participants</div></div>' : '') +
     '</div>' +
     (state.treeLinkingNodeId === n.id
@@ -3812,7 +3826,7 @@ function linkColumns(n, sug) {
     const pathAttr = nested ? ' data-path="' + esc(chain.join(' › ')) + '"' : '';
     // spell out the path the "… ›" hides, so a screen reader is not left with an ellipsis
     const nameHTML = (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span>' : '') +
-      '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '<span aria-hidden="true">… › </span>' : '') + esc(l.name) + '</span>';
+      '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '<span aria-hidden="true">… › </span>' : '') + hlName(l.name) + '</span>';
     const mainInner = originTag + nameHTML + countBadge;
     // The connector line is decorative, so the relationship it draws has to be said in words:
     // landing on this group on its own would otherwise never reveal whether it is an established
@@ -4658,7 +4672,7 @@ function renderTreeLinkMenu(q, menuSel) {
       (hasKids ? ' aria-expanded="' + (opts.collapsed ? 'false' : 'true') + '"' : '') +
       ' style="' + indent + '">' +
       chev +
-      '<span class="menu-item-body"><span class="tlm-name-row"><span class="menu-item-title">' + esc(n.name) + '</span>' +
+      '<span class="menu-item-body"><span class="tlm-name-row"><span class="menu-item-title">' + hlName(n.name, q) + '</span>' +
       '<span class="tr-count' + (node ? ' is-ovpop' : '') + '"' + (node ? ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"' : '') + '><i data-icon="users"></i>' + n.size + '<span class="sr-only"> participants</span></span>' +
       (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"') : (opts.overlapPct != null ? '<span class="tlm-ov" data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> of members are in both groups</span></span>' : '')) + '</span>' +
       '</span></div>';
