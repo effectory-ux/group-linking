@@ -992,15 +992,6 @@
     .ov-row-why { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0;
                   background: none; border: 0; color: var(--content-secondary); cursor: help; }
     .ov-row-why i { width: 16px; height: 16px; display: flex; }
-    /* ── Edge case: nothing to link with at all (first survey) ──
-       No design-system empty state exists yet, so this is composed from primitives. */
-    .gl-nolink { max-width: 480px; margin: 0 auto; padding: var(--spacing-super-loose) var(--spacing-loose); text-align: center; }
-    .gl-nolink[hidden] { display: none; }
-    .gl-nolink-art { width: 200px; max-width: 100%; height: auto; margin: 0 auto var(--spacing-loose); display: block; }
-    .gl-nolink-title { font-size: 20px; font-weight: 600; line-height: 28px; color: var(--content-base); margin: 0; }
-    .gl-nolink-text { font-size: 14px; line-height: 1.6; color: var(--content-secondary); margin: var(--spacing-tight) 0 var(--spacing-loose); }
-    .gl-nolink .btn i { width: 16px; height: 16px; display: flex; flex-shrink: 0; }
-
     /* ── Edge case: step 2 cannot be opened yet ── */
     .acc.is-blocked .acc-head { cursor: not-allowed; }
     .acc.is-blocked .acc-num { background: var(--bg-disabled); color: var(--content-disabled); }
@@ -1293,16 +1284,8 @@
           </div>
         </div></div>
 
-        <!-- Edge case: the first survey in the account has nothing to link with -->
-        <div class="gl-nolink" id="glNoLink" hidden>
-          <img class="gl-nolink-art" src="https://effectory-ux.github.io/Engage-Design-system-/assets/illustrations/group-linking-explainer.png" alt="" />
-          <h2 class="gl-nolink-title">You can’t link a previous survey yet</h2>
-          <p class="gl-nolink-text">This is the first survey in your account, so there’s nothing to compare it with. Once this survey closes, you can link the next survey to it, and the trend lines start from there.</p>
-          <a class="btn btn-secondary" href="https://support.effectory.com/" target="_blank" rel="noopener noreferrer">Learn more about previous survey links <i data-icon="external-link"></i></a>
-        </div>
-
         <!-- Accordion step 1: select a survey -->
-        <h2 class="sr-only" data-step-heading>Step 1: select a survey to compare with</h2>
+        <h2 class="sr-only">Step 1: select a survey to compare with</h2>
         <div class="acc" id="acc-select">
           <button class="acc-head" data-acctoggle="select" aria-expanded="false">
             <span class="acc-num">1</span>
@@ -1354,7 +1337,7 @@
         </div>
 
         <!-- Accordion step 2: link the groups -->
-        <h2 class="sr-only" data-step-heading>Step 2: link the groups from both surveys</h2>
+        <h2 class="sr-only">Step 2: link the groups from both surveys</h2>
         <div class="acc" id="acc-link">
           <button class="acc-head" data-acctoggle="link" aria-expanded="false">
             <span class="acc-num">2</span>
@@ -2179,6 +2162,11 @@ function renderCrumb() {
 }
 
 function setView(view) {
+  // with no earlier survey there is nothing to link, so the page has no reason to exist
+  if (view === 'linking' && !state.prevAvailable) {
+    view = 'overview';
+    history.replaceState(null, '', location.pathname + location.search + '#' + VIEW_HASH.overview);
+  }
   state.view = view;
   renderCrumb();
   $('#view-overview').hidden = view !== 'overview';
@@ -2231,6 +2219,7 @@ function applyScenario(key) {
   closeOverlays();
   if (linkingBlocked()) { openAcc('link', false); openAcc('select', false); }
   syncScenarioUI();
+  if (!state.prevAvailable) goToView('overview');   // the disabled row is what there is to see
   // keep the scenario in the URL, so an edge case can be handed over as a link
   const q = sc.key === 'default' ? '' : '?scenario=' + sc.key;
   history.replaceState(null, '', location.pathname + q + location.hash);
@@ -2249,13 +2238,6 @@ function syncScenarioUI() {
   if (note) note.innerHTML = '<i data-icon="lock"></i> ' + (state.prevAvailable
     ? 'Select a survey in step 1 first.'
     : 'Available once you have a completed survey to compare with.');
-  // with no earlier survey at all, the two-step flow has nothing to offer: the page
-  // becomes a single empty state instead of a stepper you can never complete
-  const nolink = $('#glNoLink'); if (nolink) nolink.hidden = state.prevAvailable;
-  ['#acc-select', '#acc-link'].forEach(sel => { const el = $(sel); if (el) el.hidden = !state.prevAvailable; });
-  document.querySelectorAll('[data-step-heading]').forEach(h => { h.hidden = !state.prevAvailable; });
-  const expl = $('#glExplainerWrap'); if (expl) expl.hidden = !state.prevAvailable;
-  const desc = $('#glHeadDescWrap'); if (desc) desc.hidden = !state.prevAvailable;
   renderSurvSelect();
   updateAccSummaries();
   renderOverview();
