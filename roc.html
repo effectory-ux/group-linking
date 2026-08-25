@@ -3995,7 +3995,12 @@ function linkColumns(n, sug) {
     const nameHTML = (nested ? '<span class="sr-only">' + esc(chain.slice(0, -1).join(', ')) + ', </span>' : '') +
       '<span class="tr-lrow-name"' + pathAttr + '>' + (nested ? '… › ' : '') + esc(l.name) + '</span>';
     const mainInner = originTag + nameHTML + countBadge;
-    right += '<div class="tr-rrow" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '"><div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
+    // The connector line is decorative, so the relationship it draws has to be said in words:
+    // landing on this group on its own would otherwise never reveal whether it is an established
+    // link or only a proposal — both read as just a group name with a number next to it.
+    const relation = '<span class="sr-only">' + (isS ? 'Suggested match with: ' : 'Linked to: ') + '</span>';
+    right += '<div class="tr-rrow" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
+      '<div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
       '<span class="tr-lrow-main">' + mainInner + '</span>' +
       '<span class="tr-lrow-act">' + actions + '</span></div></div>';
   });
