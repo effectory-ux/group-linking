@@ -2844,7 +2844,7 @@ function renderOverview() {
     act.innerHTML = 'Not available ' +
       '<span class="tt-demo"><button class="ov-row-why" type="button" aria-label="Why previous survey links are not available">' +
       '<i data-icon="info"></i></button>' +
-      '<div class="tooltip is-above">Available once you have an earlier completed survey to compare with.</div></span>';
+      '<div class="tooltip is-above">There’s no other survey in this account to compare this one with yet.</div></span>';
   } else if (!state.selectedSurvey) {
     setLinkRowEnabled(true);
     sub.textContent = 'No previous survey selected';
