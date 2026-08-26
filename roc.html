@@ -15,7 +15,9 @@
     body { background: var(--bg-interface-body); }
 
     /* Responsive page padding (design-system §2): desktop 48/64, tablet 32/24, mobile 24/16 */
-    :root { --page-y: calc(var(--spacing-loose) * 2); --page-x: calc(var(--spacing-extra-loose) * 2); }
+    :root { --page-y: calc(var(--spacing-loose) * 2); --page-x: calc(var(--spacing-extra-loose) * 2);
+            /* morph timings, live-tweakable from the developer panel */
+            --gl-morph-flight: 360ms; --gl-morph-reveal: 200ms; --gl-morph-bd-delay: 220ms; --gl-morph-bd-dur: 200ms; }
     @media (max-width: 1199px) { :root { --page-y: var(--spacing-extra-loose); --page-x: var(--spacing-loose); } }
     @media (max-width: 575px)  { :root { --page-y: var(--spacing-loose); --page-x: var(--spacing-base); } }
 
@@ -777,11 +779,11 @@
        washes in the flying box with it. During a morph that animation sits out and the backdrop is
        driven on its own: transparent to start, then it holds off while the box covers most of its
        distance before the page darkens. */
-    #linkPickerOverlay.gl-morph-open { animation: none; transition: background 200ms var(--ease-out) 220ms; }
+    #linkPickerOverlay.gl-morph-open { animation: none; transition: background var(--gl-morph-bd-dur) var(--ease-out) var(--gl-morph-bd-delay); }
     #linkPickerOverlay.is-morphing { background: rgb(0 0 0 / 0%); }
     /* the clicked box, flying to the dialog's rectangle; the dialog fades in once it arrives */
     .gl-morph-surface { position: fixed; pointer-events: none; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-base); box-shadow: var(--sh-action);
-                        transition: left 360ms var(--ease-out), top 360ms var(--ease-out), width 360ms var(--ease-out), height 360ms var(--ease-out), border-radius 360ms var(--ease-out), box-shadow 360ms var(--ease-out); }
+                        transition: left var(--gl-morph-flight) var(--ease-out), top var(--gl-morph-flight) var(--ease-out), width var(--gl-morph-flight) var(--ease-out), height var(--gl-morph-flight) var(--ease-out), border-radius var(--gl-morph-flight) var(--ease-out), box-shadow var(--gl-morph-flight) var(--ease-out); }
     .gl-morph-surface.is-arrived { border-radius: var(--radius-xl); box-shadow: var(--sh-dialogs); }
     #linkPickerMenu { display: flex; flex-direction: column; gap: var(--spacing-tight); }
     #linkPickerMenu .tlm-item { background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-base-tight) var(--spacing-base); transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
@@ -1075,6 +1077,13 @@
     .gl-dev-opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .gl-dev-opt-name { font-weight: 500; }
     .gl-dev-opt-note { font-size: 12px; line-height: 1.45; color: #9fadcd; }
+    .gl-dev-knob { display: flex; flex-direction: column; gap: 2px; padding: var(--spacing-tight); }
+    .gl-dev-knob-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #9fadcd; }
+    .gl-dev-knob-top output { font-variant-numeric: tabular-nums; color: #e7ebf5; }
+    .gl-dev-knob input[type="range"] { width: 100%; margin: 0; accent-color: #57c4c0; }
+    .gl-dev-replay { margin: var(--spacing-tight); padding: 6px var(--spacing-base-tight); font-family: inherit; font-size: 12px;
+                     background: #1b2a4a; color: #e7ebf5; border: 1px solid #35425f; border-radius: var(--radius-sm); cursor: pointer; }
+    .gl-dev-replay:hover { background: #22345a; }
     .gl-dev-foot { padding: var(--spacing-tight) var(--spacing-base) var(--spacing-base-tight); font-size: 12px; color: #8a99bd; border-top: 1px solid #35425f; }
     .gl-dev-foot kbd { font-family: inherit; font-size: 12px; padding: 1px 5px; border: 1px solid #4a587a; border-radius: var(--radius-sm); background: #17223c; }
 </style>
@@ -4246,6 +4255,16 @@ $('#membersScroll').addEventListener('scroll', (e) => {
 // modal in the middle of the screen: it is a step inside the row's work, not a detour from it.
 var linkPickerReturn = null;
 var morphSurface = null, morphTimer = null;
+// One source for the morph's timings: the CSS drives the flight and the backdrop, the JS drives
+// the handover between them, so they cannot drift apart while being tuned.
+const MORPH = { flight: 360, reveal: 200, bdDelay: 220, bdDur: 200 };
+function applyMorphVars() {
+  const r = document.documentElement.style;
+  r.setProperty('--gl-morph-flight', MORPH.flight + 'ms');
+  r.setProperty('--gl-morph-reveal', MORPH.reveal + 'ms');
+  r.setProperty('--gl-morph-bd-delay', MORPH.bdDelay + 'ms');
+  r.setProperty('--gl-morph-bd-dur', MORPH.bdDur + 'ms');
+}
 function openLinkPicker(fromRect, nodeId) {
   const node = findTreeNode(state.treeLinkingNodeId); if (!node) return;
   const ov = $('#linkPickerOverlay'), dlg = ov.querySelector('.dialog');
@@ -4287,13 +4306,13 @@ function openLinkPicker(fromRect, nodeId) {
     ov.classList.remove('is-morphing');
     morphTimer = setTimeout(() => {              // the surface has arrived: reveal the content in it
       morphTimer = null;
-      dlg.style.transition = 'opacity 200ms var(--ease-out), transform 200ms var(--ease-out)';
+      dlg.style.transition = 'opacity ' + MORPH.reveal + 'ms var(--ease-out), transform ' + MORPH.reveal + 'ms var(--ease-out)';
       dlg.style.transform = 'translateY(6px)';
       void dlg.offsetWidth;
       dlg.style.transform = 'none';
       dlg.style.opacity = '1';
-      setTimeout(() => { if (morphSurface === s) { s.remove(); morphSurface = null; } }, 240);
-    }, 360);
+      setTimeout(() => { if (morphSurface === s) { s.remove(); morphSurface = null; } }, MORPH.reveal + 40);
+    }, MORPH.flight);
   }
   linkPickerReturn = nodeId || null;
   setTimeout(() => { const i = $('#linkPickerSearch'); if (i) i.focus({ preventScroll: true }); }, 60);
@@ -4318,7 +4337,8 @@ document.addEventListener('keydown', (e) => {
 }, true);
 document.addEventListener('click', (e) => {
   if ($('#linkPickerOverlay').hidden) return;
-  if (e.target.closest && (e.target.closest('#linkPickerOverlay') || e.target.closest('[data-treeadd]'))) return;
+  if (e.target.closest && (e.target.closest('#linkPickerOverlay') || e.target.closest('[data-treeadd]') ||
+      e.target.closest('#glDev'))) return;   // the panel tunes this dialog; it must not close it
   closeLinkPicker();
 });
 
@@ -5659,9 +5679,41 @@ function renderDevPanel() {
         '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
       '</span>' +
     '</button>').join('') +
-    '<div class="gl-dev-label">Suggestion overlap</div>' + optRow(OVERLAP_UIS, state.overlapUI, 'overlapui');
+    '<div class="gl-dev-label">Suggestion overlap</div>' + optRow(OVERLAP_UIS, state.overlapUI, 'overlapui') +
+    '<div class="gl-dev-label">Morph timing</div>' + MORPH_KNOBS.map(k =>
+      '<label class="gl-dev-knob"><span class="gl-dev-knob-top">' + esc(k.label) +
+        '<output data-morphout="' + k.key + '">' + MORPH[k.key] + 'ms</output></span>' +
+        '<input type="range" data-morphvar="' + k.key + '" min="' + k.min + '" max="' + k.max +
+        '" step="20" value="' + MORPH[k.key] + '" /></label>').join('') +
+    '<button class="gl-dev-replay" data-morphreplay>Replay the morph</button>';
   icons();
 }
+// what the panel exposes: the flight, the handover, and the backdrop's wait and fade
+const MORPH_KNOBS = [
+  { key: 'flight',  label: 'Flight',        min: 100, max: 900 },
+  { key: 'reveal',  label: 'Content fade',  min: 60,  max: 600 },
+  { key: 'bdDelay', label: 'Backdrop wait', min: 0,   max: 700 },
+  { key: 'bdDur',   label: 'Backdrop fade', min: 60,  max: 700 },
+];
+// dragging a slider must not rebuild the panel: it would drop the drag. Only the readout changes.
+document.addEventListener('input', (e) => {
+  const el = e.target.closest && e.target.closest('[data-morphvar]');
+  if (!el) return;
+  MORPH[el.dataset.morphvar] = Number(el.value);
+  applyMorphVars();
+  const out = document.querySelector('[data-morphout="' + el.dataset.morphvar + '"]');
+  if (out) out.textContent = el.value + 'ms';
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest || !e.target.closest('[data-morphreplay]')) return;
+  // close whatever is open, then run it again from the same row
+  const openNode = state.treeLinkingNodeId;
+  closeLinkPicker();
+  const pick = openNode
+    ? document.querySelector('#treeBody .tr-card[data-nodeid="' + openNode + '"] [data-treeadd]')
+    : (document.querySelector('#treeBody .tr-lrow.is-empty') || document.querySelector('#treeBody [data-treeadd]'));
+  if (pick) setTimeout(() => pick.click(), 60);
+});
 function setDevPanel(open) {
   buildDevPanel();
   const el = $('#glDev'); if (!el) return;
@@ -5790,6 +5842,8 @@ const bootScenario = new URLSearchParams(location.search).get('scenario');
 if (bootScenario && SCENARIOS.some(sc => sc.key === bootScenario)) applyScenario(bootScenario);
 else syncScenarioUI();
 if (new URLSearchParams(location.search).get('dev') === '1') setDevPanel(true);
+
+applyMorphVars();
 
 icons();
 </script>
