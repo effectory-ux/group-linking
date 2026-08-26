@@ -17,7 +17,7 @@
     /* Responsive page padding (design-system §2): desktop 48/64, tablet 32/24, mobile 24/16 */
     :root { --page-y: calc(var(--spacing-loose) * 2); --page-x: calc(var(--spacing-extra-loose) * 2);
             /* morph timings, live-tweakable from the developer panel */
-            --gl-morph-flight: 360ms; --gl-morph-reveal: 200ms; --gl-morph-bd-delay: 220ms; --gl-morph-bd-dur: 200ms; }
+            --gl-morph-flight: 300ms; --gl-morph-reveal: 160ms; --gl-morph-bd-delay: 60ms; --gl-morph-bd-dur: 560ms; }
     @media (max-width: 1199px) { :root { --page-y: var(--spacing-extra-loose); --page-x: var(--spacing-loose); } }
     @media (max-width: 575px)  { :root { --page-y: var(--spacing-loose); --page-x: var(--spacing-base); } }
 
@@ -4055,7 +4055,9 @@ var linkPickerReturn = null;
 var morphSurface = null, morphTimer = null;
 // One source for the morph's timings: the CSS drives the flight and the backdrop, the JS drives
 // the handover between them, so they cannot drift apart while being tuned.
-const MORPH = { flight: 360, reveal: 200, bdDelay: 220, bdDur: 200 };
+// The backdrop starts almost at once but fades slowly, so it is still deepening after the box has
+// landed: the dialog reads as crisp while the page settles behind it.
+const MORPH = { flight: 300, reveal: 160, bdDelay: 60, bdDur: 560 };
 function applyMorphVars() {
   const r = document.documentElement.style;
   r.setProperty('--gl-morph-flight', MORPH.flight + 'ms');
