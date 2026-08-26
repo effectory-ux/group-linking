@@ -3813,7 +3813,7 @@ function linkColumns(n, sug) {
     const tipId = 'trEmptyTip-' + esc(n.id);
     const right = '<div class="tr-rrow"><div class="tr-empty-wrap' + (showTip ? ' tt-demo' : '') + '">' +
       '<button class="tr-lrow is-empty" data-treeadd="' + esc(n.id) + '"' + (showTip ? ' aria-describedby="' + tipId + '"' : '') + '><span>Select matching group</span><i class="tr-empty-plus" data-icon="plus"></i></button>' +
-      (showTip ? '<div class="tooltip is-above" id="' + tipId + '">Pick the matching group from your previous survey so last time’s scores show up as a trend.</div>' : '') +
+      (showTip ? '<div class="tooltip is-above" id="' + tipId + '">Pick the matching group from your previous survey.</div>' : '') +
       '</div></div>';
     return { mid: '<svg class="tr-conn-svg" preserveAspectRatio="none" aria-hidden="true"></svg>', right };
   }
