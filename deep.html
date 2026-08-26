@@ -843,6 +843,11 @@
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
     .tr-conf-wrap { flex-shrink: 0; }
+    /* saving: the row's controls go quiet and a spinner sits where the actions were */
+    .tr-card.is-saving .tr-card-right > *:not(.tr-saving) { opacity: .4; pointer-events: none; }
+    .tr-card.is-saving .tr-leftcard { opacity: .7; }
+    .tr-saving { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .tr-card-right { position: relative; }
     .tr-count.is-static { cursor: default; }
     .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
     .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
@@ -3159,6 +3164,24 @@ function collapseRowThen(nodeId, done) {
   setTimeout(() => { done(); if (main) main.scrollTop = scrollTop; }, 320);
 }
 // after linking a group: animate its row out if the current filter no longer includes it, then re-render + bump
+// In the real product a link is a write to the server, so the row it belongs to says it is saving
+// before it settles. The work runs after, and its own re-render clears the spinner.
+const SAVE_MS = 420;
+function saveLink(nodeId, work) {
+  const card = nodeId ? document.querySelector('#treeBody .tr-card[data-nodeid="' + String(nodeId).replace(/"/g, '\\"') + '"]') : null;
+  const right = card && card.querySelector('.tr-card-right');
+  if (!card || !right) { work(); return; }          // nothing to attach to: just do the work
+  card.classList.add('is-saving');
+  const s = document.createElement('div');
+  s.className = 'tr-saving';
+  s.innerHTML = '<span class="spinner spinner-sm" role="status" aria-label="Saving"></span>';
+  right.appendChild(s);
+  setTimeout(() => {
+    card.classList.remove('is-saving');
+    if (s.parentNode) s.remove();                   // the re-render usually takes it; this covers the rest
+    work();
+  }, SAVE_MS);
+}
 function commitTreeLink(nodeId) {
   const activeKey = activeFilterKey();
   const leaving = activeKey === 'nolink' || activeKey === 'suggested';
@@ -3857,12 +3880,12 @@ function renderTree() {
   body.querySelectorAll('[data-treeunlink]').forEach(b => b.addEventListener('click', () => {
     const [nodeId, linkName] = b.dataset.treeunlink.split('|');
     const node = findTreeNode(nodeId);
-    if (node) {
+    if (node) saveLink(nodeId, () => {
       node.links = node.links.filter(l => l.name !== linkName);
       syncSuggestionForNode(node);
       toast('Link to ' + linkName + ' removed');
       renderTree(); renderLinking();
-    }
+    });
   }));
   // undo "no matching group" — put the group back on the to-do list
   body.querySelectorAll('[data-treerelink]').forEach(b => b.addEventListener('click', () => {
@@ -4164,6 +4187,9 @@ document.addEventListener('mouseout', (e) => {
 // confirm or reject a single previous-survey link on a node
 function treeLinkAction(nodeId, linkName, action) {
   const node = findTreeNode(nodeId); if (!node) return;
+  saveLink(nodeId, () => treeLinkCommit(node, nodeId, linkName, action));
+}
+function treeLinkCommit(node, nodeId, linkName, action) {
   if (action === 'approve') {
     const l = node.links.find(x => x.name === linkName); if (l) { l.status = 'linked'; l.origin = 'manual'; }
     maybeCelebrateFirstMatch(node.name, linkName);
@@ -4526,15 +4552,20 @@ function renderTreeLinkMenu(q, menuSel) {
     syncSuggestionForNode(node);
     const ov = document.getElementById('linkPickerOverlay'); if (ov) ov.hidden = true;
     maybeCelebrateFirstMatch(node.name, picked);   // set the flag before re-render so tooltips drop
-    commitTreeLink(node.id);
+    renderTree();                                  // the row is back from the dialog, ready to show saving
+    saveLink(node.id, () => commitTreeLink(node.id));
   }));
   // "no matching group" — resolve this group off the to-do list without linking
   menu.querySelectorAll('[data-treenomatch]').forEach(b => b.addEventListener('click', () => {
     if (!node) return;
+    const ov = document.getElementById('linkPickerOverlay'); if (ov) ov.hidden = true;
+    state.treeLinkingNodeId = null; state.bulkMode = null;
+    renderTree();
+    saveLink(node.id, () => noMatchCommit(node));
+  }));
+  function noMatchCommit(node) {
     node.noMatch = true; node.links = [];
     syncSuggestionForNode(node);
-    state.treeLinkingNodeId = null; state.bulkMode = null;
-    const ov = document.getElementById('linkPickerOverlay'); if (ov) ov.hidden = true;
     announce(node.name + ' marked as no matching group. ' + linkProgressText());
     toast(node.name + ' marked as no matching group');
     pickerActive = null;
@@ -4544,7 +4575,7 @@ function renderTreeLinkMenu(q, menuSel) {
     } else {
       renderTree(); renderLinking();
     }
-  }));
+  }
   syncPickerActive(menu);
   icons();
 }
