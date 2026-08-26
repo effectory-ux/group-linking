@@ -3664,10 +3664,11 @@ function confBadge(sug) {
   // Tooltips carry text and nothing else, so the affordance lives in the sentence: "See which"
   // says activating it shows you the people, without a second element and without "click", which
   // is wrong for touch and for the keyboard.
-  const invite = 'See which ' + o.shared + ' of the ' + o.union + ' people are in both groups';
+  // the badge shows a bare "40%", so the tooltip has to say what that number is before inviting
+  const invite = o.pct + '% member overlap: see which ' + o.shared + ' of the ' + o.union + ' people are in both groups';
   return '<span class="tt-demo tr-conf-wrap">' +
     overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
-      ' aria-label="' + o.pct + '% member overlap. ' + esc(invite) + '"', true) +
+      ' aria-label="' + esc(invite) + '"', true) +
     '<div class="tooltip is-above">' + esc(invite) + '.</div></span>';
 }
 
