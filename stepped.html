@@ -773,8 +773,11 @@
     /* wide "Link a group" dialog with card rows (like the tree overview) */
     #linkPickerOverlay .dialog { width: 600px; max-width: calc(100vw - 2 * var(--spacing-loose)); max-height: 80vh; }
     #linkPickerOverlay .mb-scroll { max-height: 52vh; }
-    /* the backdrop holds off while the box starts moving, then fades in and lands with it */
-    #linkPickerOverlay { transition: background 200ms var(--ease-out) 220ms; }
+    /* The design system fades every .overlay in by opacity, which reveals the backdrop at once and
+       washes in the flying box with it. During a morph that animation sits out and the backdrop is
+       driven on its own: transparent to start, then it holds off while the box covers most of its
+       distance before the page darkens. */
+    #linkPickerOverlay.gl-morph-open { animation: none; transition: background 200ms var(--ease-out) 220ms; }
     #linkPickerOverlay.is-morphing { background: rgb(0 0 0 / 0%); }
     /* the clicked box, flying to the dialog's rectangle; the dialog fades in once it arrives */
     .gl-morph-surface { position: fixed; pointer-events: none; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-base); box-shadow: var(--sh-action);
@@ -3776,7 +3779,8 @@ function openLinkPicker(fromRect, nodeId) {
     dlg.style.animation = 'none';
     dlg.style.transition = 'none';
     dlg.style.opacity = '0';
-    ov.classList.add('is-morphing');            // backdrop starts clear, fades in during the flight
+    ov.classList.add('gl-morph-open');          // the system's opacity fade sits out for the morph
+    ov.classList.add('is-morphing');            // and the backdrop starts clear
     ov.hidden = false;
     const d = dlg.getBoundingClientRect();       // where the surface is flying to
     const s = document.createElement('div');
@@ -3808,7 +3812,7 @@ function closeLinkPicker() {
   const dlg = ov.querySelector('.dialog');
   ov.hidden = true;
   ['transition','transform','opacity','transformOrigin','animation'].forEach(k => dlg.style[k] = '');
-  ov.classList.remove('is-morphing');
+  ov.classList.remove('is-morphing', 'gl-morph-open');
   if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
   if (morphSurface) { morphSurface.remove(); morphSurface = null; }
   const nodeId = linkPickerReturn; linkPickerReturn = null;
