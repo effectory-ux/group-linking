@@ -88,26 +88,6 @@
     .ov-tl-ms-icon i { width: 14px; height: 14px; display: flex; }
 
     /* "Did you know?" tips carousel stuck to the bottom of the timeline card (Figma) */
-    .ov-tips { position: relative; z-index: 0; margin-top: -10px; display: flex; align-items: center; gap: var(--spacing-base-tight); padding: calc(var(--spacing-loose) + 10px) var(--spacing-base) var(--spacing-loose); background: var(--bg-highlight-subtle); border-radius: 0 0 var(--radius-lg) var(--radius-lg); box-shadow: var(--sh-card); }
-    .ov-tips-icon { flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-md); background: #fff3d6; display: flex; align-items: center; justify-content: center; color: var(--content-highlight-secondary); }
-    .ov-tips-icon i { width: 20px; height: 20px; display: flex; }
-    .ov-tips-viewport { flex: 1; min-width: 0; }
-    .ov-tip-item { display: none; }
-    .ov-tip-item.is-active { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); animation: tipFade var(--motion-base) var(--ease-out); }
-    .ov-tip-copy { min-width: 0; }
-    @keyframes tipFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    .ov-tip-title { font-size: 14px; font-weight: 600; color: var(--content-base); }
-    .ov-tip-text { font-size: 12px; line-height: 1.35; color: var(--content-base); opacity: 0.7; margin-top: var(--spacing-extra-tight); }
-    .ov-tip-cta { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); white-space: nowrap; padding: 0; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--content-highlight); cursor: pointer; }
-    .ov-tip-cta i { width: 14px; height: 14px; display: flex; }
-    .ov-tip-cta:hover { text-decoration: underline; }
-    .ov-tips-dots { flex-shrink: 0; display: flex; align-items: center; gap: var(--spacing-tight); }
-    .ov-tip-dot { width: 8px; height: 8px; padding: 0; border: none; border-radius: var(--radius-full); background: var(--bg-tertiary); cursor: pointer; transition: background var(--motion-base) var(--ease-out); }
-    .ov-tip-dot:hover { background: var(--content-subtle); }
-    .ov-tip-dot.is-active { background: var(--bg-positive); }
-    .ov-tips-pause { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: var(--spacing-extra-tight); padding: 0; border: none; border-radius: var(--radius-sm); background: none; color: var(--content-subtle); cursor: pointer; transition: color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out); }
-    .ov-tips-pause:hover { color: var(--content-base); background: var(--bg-base-hover); }
-    .ov-tips-pause i { width: 12px; height: 12px; display: flex; }
 
     /* first-match celebration dialog */
     /* ── First-match celebration: results preview on a blue field ── */
@@ -647,7 +627,7 @@
     @media (prefers-reduced-motion: reduce) { .tr-children.is-animating { transition: none; } }
     /* the design system covers its own animations in components.css; these are this page's */
     @media (prefers-reduced-motion: reduce) {
-      .ov-tip-item.is-active, .gl-empty-icon.is-celebrate, .gl-spark, .gl-bulkbar,
+      .gl-empty-icon.is-celebrate, .gl-spark, .gl-bulkbar,
       .bulk-bar.bulk-in, .shift-tip, .tr-filter-count.is-bump, .view-fade,
       .tr-card.is-flash > .tr-card-grid .tr-card-right .tr-lrow:not(.is-empty) { animation: none; }
     }
@@ -1005,8 +985,6 @@
       .gl-sheet { padding: var(--spacing-loose) var(--spacing-base); }
       .ov-banner { flex-wrap: wrap; }
       .ov-banner .ov-banner-text { flex: 1 1 220px; }
-      .ov-tip-item.is-active { flex-wrap: wrap; }
-      .ov-tip-cta { white-space: normal; text-align: left; }
     }
     @media (max-width: 575px) {
       .ov-tl-band-lbl { display: none; }
@@ -1194,28 +1172,6 @@
               <div class="ov-tl-ms is-future" style="left:88%;"><span class="ov-tl-ms-dot"></span><span class="ov-tl-ms-stem"></span><span class="ov-tl-ms-icon"><i data-icon="barchart-2"></i></span></div>
             </div>
           </div>
-        </div>
-        <div class="ov-tips">
-          <span class="ov-tips-icon"><i data-icon="lightbulb"></i></span>
-          <div class="ov-tips-viewport" id="ovTipsTrack">
-            <div class="ov-tip-item is-active" data-tip-needs="prev">
-              <div class="ov-tip-copy"><div class="ov-tip-title">Link a previous survey to see results over time</div><div class="ov-tip-text">Connect this survey to an earlier one to compare scores and spot trends across your teams.</div></div>
-              <button class="ov-tip-cta" data-goto="linking">Link previous survey <i data-icon="arrow-right"></i></button>
-            </div>
-            <div class="ov-tip-item">
-              <div class="ov-tip-copy"><div class="ov-tip-title">Release your results in phases</div><div class="ov-tip-text">Share results with leadership first, then roll them out to managers and teams when you’re ready.</div></div>
-              <button class="ov-tip-cta">Set up phased release <i data-icon="arrow-right"></i></button>
-            </div>
-            <div class="ov-tip-item">
-              <div class="ov-tip-copy"><div class="ov-tip-title">Lift your response rate with reminders</div><div class="ov-tip-text">Schedule automatic reminders to nudge people before the survey closes.</div></div>
-              <button class="ov-tip-cta">Set reminders <i data-icon="arrow-right"></i></button>
-            </div>
-            <div class="ov-tip-item" data-tip-needs="prev">
-              <div class="ov-tip-copy"><div class="ov-tip-title">Link groups even when names don’t match</div><div class="ov-tip-text">Renamed or reorganized a team? Connect the old group to its new one so their results stay linked over time.</div></div>
-              <button class="ov-tip-cta" data-goto="linking">Review group links <i data-icon="arrow-right"></i></button>
-            </div>
-          </div>
-          <div class="ov-tips-dots" id="ovTipsDots"></div>
         </div>
 
         <!-- Survey settings -->
@@ -2316,7 +2272,6 @@ function syncScenarioUI() {
   updateAccSummaries();
   renderOverview();
   renderHistory();
-  syncTips();
   renderDevPanel();
   if (state.view === 'linking') renderLinking();
   icons();
@@ -5181,67 +5136,6 @@ if (!location.hash) history.replaceState(null, '', location.pathname + location.
 setView(viewFromHash());   // open the view named in the URL (#overview or #previous-survey-links)
 
 // overview tips carousel — page through the tips stuck to the bottom of the timeline card
-// a scenario can take tips out of rotation, so syncTips() is callable from outside
-var syncTips = function () {};
-(function setupOvTips() {
-  const track = document.getElementById('ovTipsTrack');
-  const dotsWrap = document.getElementById('ovTipsDots');
-  if (!track || !dotsWrap) return;
-  const all = [...track.querySelectorAll('.ov-tip-item')];
-  let items = all.slice();      // the tips currently in rotation
-  let idx = 0;
-  // a mechanism to stop the rotation is required once it moves on its own (WCAG 2.2.2)
-  dotsWrap.innerHTML = all.map((_, i) =>
-    '<button class="ov-tip-dot' + (i === 0 ? ' is-active' : '') + '" data-tipdot="' + i + '" aria-label="Tip ' + (i + 1) + ' of ' + all.length + '"></button>').join('') +
-    '<div class="tt-demo"><button class="ov-tips-pause" id="ovTipsPause" aria-label="Pause tips"><i data-icon="pause"></i></button><div class="tooltip is-above">Pause tips</div></div>';
-  const dots = [...dotsWrap.querySelectorAll('.ov-tip-dot')];
-  const show = (n) => {
-    if (!items.length) return;
-    idx = (n + items.length) % items.length;
-    const cur = items[idx];
-    all.forEach(it => it.classList.toggle('is-active', it === cur));
-    dots.forEach((d, i) => d.classList.toggle('is-active', all[i] === cur));
-  };
-  // a tip that sends you off to link a previous survey is noise when there is none
-  syncTips = function () {
-    items = all.filter(it => !(it.dataset.tipNeeds === 'prev' && !state.prevAvailable));
-    dots.forEach((d, i) => {
-      const pos = items.indexOf(all[i]);
-      d.hidden = pos < 0;
-      if (pos >= 0) d.setAttribute('aria-label', 'Tip ' + (pos + 1) + ' of ' + items.length);
-    });
-    show(0);
-  };
-  // auto-advance every 8s; pause on hover and on focus, reset the clock on manual navigation
-  let timer = null;
-  let paused = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const start = () => { if (!paused && !timer) timer = setInterval(() => show(idx + 1), 8000); };
-  const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
-  const bump = () => { stop(); start(); };
-  document.querySelectorAll('[data-tipnav]').forEach(b =>
-    b.addEventListener('click', () => { show(idx + (b.dataset.tipnav === 'next' ? 1 : -1)); bump(); }));
-  dots.forEach(d => d.addEventListener('click', () => { show(items.indexOf(all[+d.dataset.tipdot])); bump(); }));
-  track.querySelectorAll('.ov-tip-cta[data-goto]').forEach(b => b.addEventListener('click', () => goToView(b.dataset.goto)));
-  const strip = document.querySelector('.ov-tips');
-  if (strip) {
-    strip.addEventListener('mouseenter', stop);
-    strip.addEventListener('mouseleave', start);
-    strip.addEventListener('focusin', stop);          // keyboard needs the same reprieve as the mouse
-    strip.addEventListener('focusout', start);
-  }
-  const pauseBtn = document.getElementById('ovTipsPause');
-  if (pauseBtn) pauseBtn.addEventListener('click', () => {
-    paused = !paused;
-    if (paused) stop(); else start();
-    pauseBtn.setAttribute('aria-label', paused ? 'Play tips' : 'Pause tips');
-    pauseBtn.innerHTML = '<i data-icon="' + (paused ? 'play' : 'pause') + '"></i>';
-    const tip = pauseBtn.parentElement.querySelector('.tooltip');
-    if (tip) tip.textContent = paused ? 'Play tips' : 'Pause tips';
-    icons();
-  });
-  syncTips();
-  start();
-})();
 
 // ?scenario=<key> boots straight into an edge case, so one can be shared as a link
 buildDevPanel();
