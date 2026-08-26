@@ -754,10 +754,7 @@
     .tr-linksearch.is-anchor { display: flex; align-items: center; min-height: 50px; padding: 0 var(--spacing-base-tight); border: 1px dashed var(--border-action-active); border-radius: var(--radius-base); background: var(--bg-secondary); }
     .tr-linkanchor { display: inline-flex; align-items: center; gap: var(--spacing-tight); font-size: 14px; font-style: italic; color: var(--content-secondary); }
     .tr-linkanchor i { width: 16px; height: 16px; display: flex; }
-    /* anchored and backdrop-less: the page behind it stays visible, and only the panel takes clicks */
-    .overlay.is-anchored { background: none; display: block; padding: 0; pointer-events: none; }
-    .overlay.is-anchored .dialog { position: fixed; pointer-events: auto; box-shadow: var(--sh-dialogs); padding: var(--spacing-loose); gap: var(--spacing-base); }
-    .overlay.is-anchored .mb-scroll { max-height: 44vh; }
+
     .tr-linksearch .search-wrap { width: 100%; }
     /* match the link-card height (50px) so the picker lines up with the group cards */
     .tr-linksearch .srch { min-height: 50px; }
@@ -774,7 +771,11 @@
     .tlm-nomatch i { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-subtle); }
     .lp-menu { position: static; width: 100%; max-height: none; border: none; box-shadow: none; background: none; padding: 0; }
     /* wide "Link a group" dialog with card rows (like the tree overview) */
-    #linkPickerOverlay .dialog { width: 480px; max-width: calc(100vw - 16px); max-height: 70vh; }
+    #linkPickerOverlay .dialog { width: 600px; max-width: calc(100vw - 2 * var(--spacing-loose)); max-height: 80vh; }
+    #linkPickerOverlay .mb-scroll { max-height: 52vh; }
+    /* the backdrop fades with the morph instead of snapping in under it */
+    #linkPickerOverlay { transition: background var(--motion-base) var(--ease-out); }
+    #linkPickerOverlay[style*="--gl-morph"] { background: rgb(0 0 0 / 0%); }
     #linkPickerMenu { display: flex; flex-direction: column; gap: var(--spacing-tight); }
     #linkPickerMenu .tlm-item { background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-base-tight) var(--spacing-base); transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
     #linkPickerMenu .tlm-item:not(.is-disabled):hover { border-color: var(--border-action-hover); box-shadow: var(--sh-action); background: var(--bg-base); }
@@ -3748,54 +3749,42 @@ $('#membersScroll').addEventListener('scroll', (e) => {
 // The picker opens as a panel anchored to the row it belongs to and grows out of it, rather than a
 // modal in the middle of the screen: it is a step inside the row's work, not a detour from it.
 var linkPickerReturn = null;
-function openLinkPicker(anchor) {
+function openLinkPicker(fromRect, nodeId) {
   const node = findTreeNode(state.treeLinkingNodeId); if (!node) return;
   const ov = $('#linkPickerOverlay'), dlg = ov.querySelector('.dialog');
   $('#linkPickerSub').textContent = node.name + '  →  ' + surveyPlain(state.selectedSurvey);
   $('#linkPickerSearch').placeholder = 'Search groups in ' + surveyPlain(state.selectedSurvey);
   $('#linkPickerSearch').value = '';
   renderTreeLinkMenu('', '#linkPickerMenu');
-  ov.classList.add('is-anchored');
-  dlg.setAttribute('aria-modal', 'false');   // nothing behind it is blocked
   ov.hidden = false;
-  placeLinkPicker(anchor);
-  // morph: start at the anchor's box and settle into the panel's own. Skipped for readers who
-  // asked for less motion, where it simply appears.
+  // Morph: the dialog starts as the box that was clicked and grows into place, so the slot in the
+  // row and the dialog read as one object rather than two. Skipped for readers who asked for
+  // less motion, where it simply appears.
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduce && anchor) {
-    const a = anchor.getBoundingClientRect(), d = dlg.getBoundingClientRect();
-    if (a.width && d.width && d.height) {
+  if (!reduce && fromRect && fromRect.width) {
+    const d = dlg.getBoundingClientRect();
+    if (d.width && d.height) {
       dlg.style.transformOrigin = 'top left';
-      dlg.style.transform = 'translate(' + (a.left - d.left) + 'px,' + (a.top - d.top) + 'px) scale(' +
-        (a.width / d.width).toFixed(3) + ',' + (a.height / d.height).toFixed(3) + ')';
-      dlg.style.opacity = '0.4';
+      dlg.style.transform = 'translate(' + (fromRect.left - d.left) + 'px,' + (fromRect.top - d.top) + 'px) scale(' +
+        (fromRect.width / d.width).toFixed(3) + ',' + (fromRect.height / d.height).toFixed(3) + ')';
+      dlg.style.opacity = '0';
+      ov.style.setProperty('--gl-morph', '0');
       requestAnimationFrame(() => {
-        dlg.style.transition = 'transform 200ms var(--ease-out), opacity 160ms var(--ease-out)';
+        dlg.style.transition = 'transform 260ms var(--ease-out), opacity 200ms var(--ease-out)';
         dlg.style.transform = 'none'; dlg.style.opacity = '1';
+        ov.style.removeProperty('--gl-morph');
       });
     }
   }
-  linkPickerReturn = anchor;
+  linkPickerReturn = nodeId || null;
   setTimeout(() => { const i = $('#linkPickerSearch'); if (i) i.focus({ preventScroll: true }); }, 60);
-}
-function placeLinkPicker(anchor) {
-  const ov = $('#linkPickerOverlay'); if (!ov || ov.hidden) return;
-  const dlg = ov.querySelector('.dialog');
-  if (!anchor || !anchor.getClientRects().length) return;
-  const a = anchor.getBoundingClientRect();
-  const w = dlg.offsetWidth, h = dlg.offsetHeight, PAD = 8;
-  let top = a.bottom + 6;
-  if (top + h > window.innerHeight - PAD) top = Math.max(PAD, a.top - h - 6);
-  dlg.style.left = Math.max(PAD, Math.min(a.left, window.innerWidth - w - PAD)) + 'px';
-  dlg.style.top = top + 'px';
 }
 function closeLinkPicker() {
   const ov = $('#linkPickerOverlay'); if (!ov || ov.hidden) return;
   const dlg = ov.querySelector('.dialog');
-  ov.hidden = true; ov.classList.remove('is-anchored');
-  ['transition','transform','opacity','left','top','transformOrigin'].forEach(k => dlg.style[k] = '');
-  const back = linkPickerReturn; linkPickerReturn = null;
-  const nodeId = back && back.dataset ? back.dataset.nodeid : null;
+  ov.hidden = true;
+  ['transition','transform','opacity','transformOrigin'].forEach(k => dlg.style[k] = '');
+  const nodeId = linkPickerReturn; linkPickerReturn = null;
   state.treeLinkingNodeId = null; renderTree();
   if (nodeId) {
     const btn = document.querySelector('#treeBody .tr-card[data-nodeid="' + nodeId + '"] [data-treeadd]');
@@ -3810,9 +3799,7 @@ document.addEventListener('click', (e) => {
   if (e.target.closest && (e.target.closest('#linkPickerOverlay') || e.target.closest('[data-treeadd]'))) return;
   closeLinkPicker();
 });
-const repositionPicker = () => placeLinkPicker(document.querySelector('.tr-linksearch'));
-window.addEventListener('resize', repositionPicker);
-document.addEventListener('scroll', repositionPicker, true);
+
 $('#linkPickerSearch').addEventListener('input', (e) => renderTreeLinkMenu(e.target.value, '#linkPickerMenu'));
 wirePickerKeys($('#linkPickerSearch'), '#linkPickerMenu');
 
@@ -3936,13 +3923,14 @@ function renderTree() {
   body.querySelectorAll('[data-linkapprove]').forEach(b => b.addEventListener('click', () => { const [id, name] = b.dataset.linkapprove.split('|'); treeLinkAction(id, name, 'approve'); }));
   body.querySelectorAll('[data-linkreject]').forEach(b => b.addEventListener('click', () => { const [id, name] = b.dataset.linkreject.split('|'); treeLinkAction(id, name, 'reject'); }));
   body.querySelectorAll('[data-treeadd]').forEach(b => b.addEventListener('click', () => {
+    // measured before the re-render replaces it: this is the box the dialog grows out of
+    const from = b.getBoundingClientRect();
     state.treeLinkingNodeId = b.dataset.treeadd;
     state.bulkMode = null;
     renderTree();
     pickerActive = null;
     drawTreeConnectors();
-    const anchor = document.querySelector('#treeBody .tr-card[data-nodeid="' + b.dataset.treeadd + '"] .tr-linksearch');
-    if (anchor) { anchor.dataset.nodeid = b.dataset.treeadd; openLinkPicker(anchor); }
+    openLinkPicker(from, b.dataset.treeadd);
   }));
   body.querySelectorAll('[data-cancellink]').forEach(b => b.addEventListener('click', () => { state.treeLinkingNodeId = null; renderTree(); }));
   body.querySelectorAll('[data-treeunlink]').forEach(b => b.addEventListener('click', () => {
