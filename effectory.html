@@ -3664,12 +3664,14 @@ function confBadge(sug) {
   // Tooltips carry text and nothing else, so the affordance lives in the sentence: "See which"
   // says activating it shows you the people, without a second element and without "click", which
   // is wrong for touch and for the keyboard.
-  // the badge shows a bare "40%", so the tooltip has to say what that number is before inviting
-  const invite = o.pct + '% member overlap: see which ' + o.shared + ' of the ' + o.union + ' people are in both groups';
+  // The count carries what the percentage cannot: 40% of 5 is two people agreeing, 35% of 34 is a
+  // real pattern, and as bare percentages those read the same way round. "member overlap" is
+  // dropped as a label because the sentence already says what the number measures.
+  const invite = o.shared + ' of ' + o.union + ' participants are in both groups (' + o.pct + '%). See who.';
   return '<span class="tt-demo tr-conf-wrap">' +
     overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
       ' aria-label="' + esc(invite) + '"', true) +
-    '<div class="tooltip is-above">' + esc(invite) + '.</div></span>';
+    '<div class="tooltip is-above">' + esc(invite) + '</div></span>';
 }
 
 function matchPopHTML(sug) {
@@ -3702,7 +3704,7 @@ function openOverlapMembers(sug) {
   ].filter(sec => sec.people.length);
   $('#members-title').textContent = 'Compare group members';
   const cmpSub = $('#membersSubtitle');
-  if (cmpSub) { cmpSub.textContent = o.pct + '% member overlap · ' + shared + ' of ' + o.union + ' people across ' + o.cur + ' and ' + o.prev + ' are in both groups.'; cmpSub.hidden = false; }
+  if (cmpSub) { cmpSub.textContent = shared + ' of ' + o.union + ' participants across ' + o.cur + ' and ' + o.prev + ' are in both groups (' + o.pct + '%).'; cmpSub.hidden = false; }
   membersState = { mode: 'sections', sections, filter: '', total: o.a + o.b - shared, totalLabel: o.cur + ' ↔ ' + o.prev };
   $('#membersSearch').value = '';
   renderMembers();
