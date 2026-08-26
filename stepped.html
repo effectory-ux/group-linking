@@ -3665,7 +3665,9 @@ function confBadge(sug) {
   // The count carries what the percentage cannot: 40% of 5 is two people agreeing, 35% of 34 is a
   // real pattern, and as bare percentages those read the same way round. "member overlap" is
   // dropped as a label because the sentence already says what the number measures.
-  const invite = o.shared + ' of ' + o.union + ' participants are in both groups (' + o.pct + '%). See who.';
+  // percentage first, because that is the number on the badge this explains; the count qualifies
+  // it, since 40% of 5 and 35% of 34 are very different amounts of evidence
+  const invite = o.pct + '% (' + o.shared + ' out of ' + o.union + ' participants) are in both groups. See who.';
   return '<span class="tt-demo tr-conf-wrap">' +
     overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
       ' aria-label="' + esc(invite) + '"', true) +
@@ -3702,7 +3704,7 @@ function openOverlapMembers(sug) {
   ].filter(sec => sec.people.length);
   $('#members-title').textContent = 'Compare group members';
   const cmpSub = $('#membersSubtitle');
-  if (cmpSub) { cmpSub.textContent = shared + ' of ' + o.union + ' participants across ' + o.cur + ' and ' + o.prev + ' are in both groups (' + o.pct + '%).'; cmpSub.hidden = false; }
+  if (cmpSub) { cmpSub.textContent = o.pct + '% overlap: ' + shared + ' out of ' + o.union + ' participants across ' + o.cur + ' and ' + o.prev + ' are in both groups.'; cmpSub.hidden = false; }
   membersState = { mode: 'sections', sections, filter: '', total: o.a + o.b - shared, totalLabel: o.cur + ' ↔ ' + o.prev };
   $('#membersSearch').value = '';
   renderMembers();
