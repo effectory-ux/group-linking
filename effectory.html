@@ -771,13 +771,14 @@
     .tlm-nomatch i { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-subtle); }
     .lp-menu { position: static; width: 100%; max-height: none; border: none; box-shadow: none; background: none; padding: 0; }
     /* wide "Link a group" dialog with card rows (like the tree overview) */
-    /* backdrop-less, and beside the content: the row being linked stays in view while choosing */
-    #linkPickerOverlay { display: block; background: none; pointer-events: none; }
-    #linkPickerOverlay .dialog { position: fixed; margin: 0; pointer-events: auto; width: 520px; max-width: calc(100vw - 16px); max-height: 65vh; box-shadow: var(--sh-dialogs); }
-    #linkPickerOverlay .mb-scroll { max-height: 40vh; }
+    #linkPickerOverlay .dialog { width: 600px; max-width: calc(100vw - 2 * var(--spacing-loose)); max-height: 80vh; }
+    #linkPickerOverlay .mb-scroll { max-height: 52vh; }
+    /* the backdrop holds off while the box starts moving, then fades in and lands with it */
+    #linkPickerOverlay { transition: background 200ms var(--ease-out) 220ms; }
+    #linkPickerOverlay.is-morphing { background: rgb(0 0 0 / 0%); }
     /* the clicked box, flying to the dialog's rectangle; the dialog fades in once it arrives */
     .gl-morph-surface { position: fixed; pointer-events: none; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-base); box-shadow: var(--sh-action);
-                        transition: left 300ms var(--ease-out), top 300ms var(--ease-out), width 300ms var(--ease-out), height 300ms var(--ease-out), border-radius 300ms var(--ease-out), box-shadow 300ms var(--ease-out); }
+                        transition: left 360ms var(--ease-out), top 360ms var(--ease-out), width 360ms var(--ease-out), height 360ms var(--ease-out), border-radius 360ms var(--ease-out), box-shadow 360ms var(--ease-out); }
     .gl-morph-surface.is-arrived { border-radius: var(--radius-xl); box-shadow: var(--sh-dialogs); }
     #linkPickerMenu { display: flex; flex-direction: column; gap: var(--spacing-tight); }
     #linkPickerMenu .tlm-item { background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-base-tight) var(--spacing-base); transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
@@ -1608,7 +1609,7 @@
 
 <!-- Link picker dialog (expanded inline search) -->
 <div class="overlay" id="linkPickerOverlay" hidden>
-  <div class="dialog dialog-s" role="dialog" aria-modal="false" aria-labelledby="linkPicker-title">
+  <div class="dialog dialog-s" role="dialog" aria-modal="true" aria-labelledby="linkPicker-title">
     <button class="dialog-close" aria-label="Close" data-close="linkPickerOverlay"><i data-icon="cross"></i></button>
     <div class="dialog-header is-sm">
       <div class="dialog-header-top"><h3 class="dialog-title" id="linkPicker-title">Link a group</h3></div>
@@ -3753,26 +3754,6 @@ $('#membersScroll').addEventListener('scroll', (e) => {
 // modal in the middle of the screen: it is a step inside the row's work, not a detour from it.
 var linkPickerReturn = null;
 var morphSurface = null, morphTimer = null;
-// The picker sits by the row it is linking, so the group stays in view while choosing. The bulk
-// and phone flows share this dialog but have no single row to sit by, and fall back to the centre.
-function placeLinkPicker() {
-  const ov = $('#linkPickerOverlay'); if (!ov || ov.hidden) return;
-  const dlg = ov.querySelector('.dialog');
-  const w = dlg.offsetWidth, h = dlg.offsetHeight, PAD = 8;
-  const slot = document.querySelector('#treeBody .tr-linksearch');
-  if (slot && slot.getClientRects().length) {
-    const a = slot.getBoundingClientRect();
-    let top = a.bottom + 8;
-    if (top + h > window.innerHeight - PAD) top = Math.max(PAD, a.top - h - 8);   // flip above
-    dlg.style.left = Math.max(PAD, Math.min(a.left, window.innerWidth - w - PAD)) + 'px';
-    dlg.style.top = top + 'px';
-  } else {
-    dlg.style.left = Math.max(PAD, (window.innerWidth - w) / 2) + 'px';
-    dlg.style.top = Math.max(PAD, (window.innerHeight - h) / 3) + 'px';
-  }
-}
-window.addEventListener('resize', placeLinkPicker);
-document.addEventListener('scroll', placeLinkPicker, true);
 function openLinkPicker(fromRect, nodeId) {
   const node = findTreeNode(state.treeLinkingNodeId); if (!node) return;
   const ov = $('#linkPickerOverlay'), dlg = ov.querySelector('.dialog');
@@ -3789,7 +3770,6 @@ function openLinkPicker(fromRect, nodeId) {
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce || !fromRect || !fromRect.width) {
     ov.hidden = false;
-    placeLinkPicker();
   } else {
     if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
     if (morphSurface) { morphSurface.remove(); morphSurface = null; }
@@ -3798,8 +3778,8 @@ function openLinkPicker(fromRect, nodeId) {
     dlg.style.animation = 'none';
     dlg.style.transition = 'none';
     dlg.style.opacity = '0';
+    ov.classList.add('is-morphing');            // backdrop starts clear, fades in during the flight
     ov.hidden = false;
-    placeLinkPicker();                           // beside the row, so the flight is short
     const d = dlg.getBoundingClientRect();       // where the surface is flying to
     const s = document.createElement('div');
     s.className = 'gl-morph-surface';
@@ -3811,15 +3791,16 @@ function openLinkPicker(fromRect, nodeId) {
     s.classList.add('is-arrived');               // radius and shadow become the dialog's
     s.style.left = d.left + 'px'; s.style.top = d.top + 'px';
     s.style.width = d.width + 'px'; s.style.height = d.height + 'px';
+    ov.classList.remove('is-morphing');
     morphTimer = setTimeout(() => {              // the surface has arrived: reveal the content in it
       morphTimer = null;
-      dlg.style.transition = 'opacity 140ms var(--ease-out), transform 140ms var(--ease-out)';
+      dlg.style.transition = 'opacity 200ms var(--ease-out), transform 200ms var(--ease-out)';
       dlg.style.transform = 'translateY(6px)';
       void dlg.offsetWidth;
       dlg.style.transform = 'none';
       dlg.style.opacity = '1';
-      setTimeout(() => { if (morphSurface === s) { s.remove(); morphSurface = null; } }, 160);
-    }, 300);
+      setTimeout(() => { if (morphSurface === s) { s.remove(); morphSurface = null; } }, 240);
+    }, 360);
   }
   linkPickerReturn = nodeId || null;
   setTimeout(() => { const i = $('#linkPickerSearch'); if (i) i.focus({ preventScroll: true }); }, 60);
@@ -3828,7 +3809,8 @@ function closeLinkPicker() {
   const ov = $('#linkPickerOverlay'); if (!ov || ov.hidden) return;
   const dlg = ov.querySelector('.dialog');
   ov.hidden = true;
-  ['transition','transform','opacity','transformOrigin','animation','left','top'].forEach(k => dlg.style[k] = '');
+  ['transition','transform','opacity','transformOrigin','animation'].forEach(k => dlg.style[k] = '');
+  ov.classList.remove('is-morphing');
   if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
   if (morphSurface) { morphSurface.remove(); morphSurface = null; }
   const nodeId = linkPickerReturn; linkPickerReturn = null;
@@ -4096,7 +4078,6 @@ function openBulkPicker(mode) {
     : 'Pick a group to link all ' + nSel + ' selected to. This replaces any group they’re already linked to.';
   const search = $('#linkPickerSearch'); if (search) search.value = '';
   openOverlay('linkPickerOverlay');
-  placeLinkPicker();
 }
 
 // Smoothly expand/collapse a children container (accordion) so rows below slide along.
@@ -4831,7 +4812,6 @@ function renderGroupSheet() {
     $('#linkPickerSearch').value = '';
     renderTreeLinkMenu('', '#linkPickerMenu');
     openOverlay('linkPickerOverlay');
-    placeLinkPicker();
   });
   const nm = body.querySelector('[data-shnomatch]');
   if (nm) nm.addEventListener('click', () => {
