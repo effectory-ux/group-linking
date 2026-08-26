@@ -843,10 +843,13 @@
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
     .tr-conf-wrap { flex-shrink: 0; }
-    /* saving: the row's actions give way to a spinner, and the content it describes stays readable */
-    .tr-card.is-saving .tr-lrow-act > *:not(.tr-saving) { display: none; }
+    /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
+       The name and count stay put, and the actions stay in place but go quiet and inert. */
+    .tr-card.is-saving .tr-origin { display: none; }
+    .tr-card.is-saving .tr-lrow-act { opacity: .4; }
     .tr-card.is-saving .tr-lrow, .tr-card.is-saving .tr-leftcard { pointer-events: none; }
-    .tr-saving { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; }
+    .tr-saving { display: inline-flex; align-items: center; flex-shrink: 0; }
+    .tr-saving .spinner { width: 14px; height: 14px; --thk: 2px; }
     .tr-count.is-static { cursor: default; }
     .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
     .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
@@ -3298,7 +3301,7 @@ function collapseRowThen(nodeId, done) {
 // In the real product a link is a write to the server, so the row it belongs to says it is saving
 // before it settles. The work runs after, and its own re-render clears the spinner.
 const SAVE_MS = 420;
-function saveLink(nodeId, work) {
+function saveLink(nodeId, work, linkName) {
   const card = nodeId ? document.querySelector('#treeBody .tr-card[data-nodeid="' + String(nodeId).replace(/"/g, '\\"') + '"]') : null;
   const right = card && card.querySelector('.tr-card-right');
   if (!card || !right) { work(); return; }          // nothing to attach to: just do the work
@@ -3306,10 +3309,13 @@ function saveLink(nodeId, work) {
   const s = document.createElement('div');
   s.className = 'tr-saving';
   s.innerHTML = '<span class="spinner spinner-sm" role="status" aria-label="Saving"></span>';
-  // in the row's action slot, not over the row: the group's name and count are already known, so
-  // they stay readable and the spinner stands where the buttons it is replacing were
-  const acts = [...right.querySelectorAll('.tr-lrow-act')];
-  (acts[acts.length - 1] || right).appendChild(s);
+  // In place of the leading origin icon, because that icon IS the pending thing: a suggestion's
+  // lightbulb becomes a "linked manually" tick once the save lands. The name and count stay put.
+  const rows = [...right.querySelectorAll('.tr-rrow[data-linkname]')];
+  const row = (linkName && rows.find(r => r.dataset.linkname === linkName)) || rows[rows.length - 1];
+  const main = row && row.querySelector('.tr-lrow-main');
+  if (main) main.insertBefore(s, main.firstChild);
+  else ([...right.querySelectorAll('.tr-lrow-act')].pop() || right).appendChild(s);
   setTimeout(() => {
     card.classList.remove('is-saving');
     if (s.parentNode) s.remove();                   // the re-render usually takes it; this covers the rest
@@ -3641,7 +3647,7 @@ function linkColumns(n, sug) {
     // link or only a proposal — both read as just a group name with a number next to it.
     const relText = isS ? 'Possible match: ' : 'Connected to: ';
     const relation = '<span class="sr-only">' + relText + '</span>';
-    list += '<div class="tr-rrow" role="listitem" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
+    list += '<div class="tr-rrow" role="listitem" data-linkname="' + esc(l.name) + '" data-linkstatus="' + (isS ? 'suggested' : 'linked') + '">' + relation +
       '<div class="tr-lrow' + (isS ? ' is-suggested' : '') + '">' +
       '<span class="tr-lrow-main">' + mainInner + '</span>' +
       '<span class="tr-lrow-act">' + actions + '</span></div></div>';
@@ -4019,7 +4025,7 @@ function renderTree() {
       syncSuggestionForNode(node);
       toast('Link to ' + linkName + ' removed');
       renderTree(); renderLinking();
-    });
+    }, linkName);
   }));
   // undo "no matching group" — put the group back on the to-do list
   body.querySelectorAll('[data-treerelink]').forEach(b => b.addEventListener('click', () => {
@@ -4321,7 +4327,7 @@ document.addEventListener('mouseout', (e) => {
 // confirm or reject a single previous-survey link on a node
 function treeLinkAction(nodeId, linkName, action) {
   const node = findTreeNode(nodeId); if (!node) return;
-  saveLink(nodeId, () => treeLinkCommit(node, nodeId, linkName, action));
+  saveLink(nodeId, () => treeLinkCommit(node, nodeId, linkName, action), linkName);
 }
 function treeLinkCommit(node, nodeId, linkName, action) {
   if (action === 'approve') {
@@ -4687,7 +4693,7 @@ function renderTreeLinkMenu(q, menuSel) {
     const ov = document.getElementById('linkPickerOverlay'); if (ov) ov.hidden = true;
     maybeCelebrateFirstMatch(node.name, picked);   // set the flag before re-render so tooltips drop
     renderTree();                                  // the row is back from the dialog, ready to show saving
-    saveLink(node.id, () => commitTreeLink(node.id));
+    saveLink(node.id, () => commitTreeLink(node.id), picked);
   }));
   // "no matching group" — resolve this group off the to-do list without linking
   menu.querySelectorAll('[data-treenomatch]').forEach(b => b.addEventListener('click', () => {
