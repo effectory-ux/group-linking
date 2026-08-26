@@ -3693,7 +3693,7 @@ function confBadge(sug) {
   // dropped as a label because the sentence already says what the number measures.
   // percentage first, because that is the number on the badge this explains; the count qualifies
   // it, since 40% of 5 and 35% of 34 are very different amounts of evidence
-  const invite = o.pct + '% (' + o.shared + ' out of ' + o.union + ' participants) are in both groups. See who.';
+  const invite = o.pct + '% (' + o.shared + ' out of ' + o.union + ' participants) are in both groups. View overlapping participants.';
   return '<span class="tt-demo tr-conf-wrap">' +
     overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
       ' aria-label="' + esc(invite) + '"', true) +
