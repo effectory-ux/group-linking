@@ -627,18 +627,7 @@
     .gl-card-sub { font-size: 14px; color: var(--content-secondary); margin-top: 2px; }
     .gl-card-content { padding: 0; }
     /* Column headers — two grey bars, aligned to the card columns */
-    /* Prototype-local until the token lands in Figma: subtle→hover step from
-       --bg-info-subtle (#e6f0fe) toward --bg-info, matching the system's
-       base→base-hover / secondary→secondary-hover logic. */
-        /* the design system has no subtle-hover step for info or positive; both are the next
-       palette step down, the same way the suggestion hover was picked */
-    /* The design system has no subtle-hover step, so these are local. Mixing each subtle fill
-       toward its OWN accent moves it the right way in either theme: deeper on a light surface,
-       lighter on a dark one. The previous values were light-mode hex, which turned the linked and
-       suggested rows almost white on hover in dark mode. */
-    :root { --gl-gutter: 60px;
-            --bg-info-subtle-hover: color-mix(in srgb, var(--bg-info-subtle) 88%, var(--content-info));
-            --bg-positive-subtle-hover: color-mix(in srgb, var(--bg-positive-subtle) 88%, var(--content-positive)); }
+    :root { --gl-gutter: 60px; }
     .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-tight); padding: var(--spacing-base-tight) 0 var(--spacing-tight); background: var(--bg-interface-body); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     .tr-cols span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
@@ -692,7 +681,7 @@
        neutral by default; blue only where the card is already blue (suggested) */
     .tr-card:hover .tr-leftcard { border-color: var(--border-action-hover); background: var(--bg-base-hover); }
     .tr-card:hover .tr-lrow:not(.is-empty) { border-color: var(--border-action-hover); background: var(--bg-base-hover); }
-    .tr-card:hover .tr-lrow.is-suggested { border-color: var(--border-info-hover); background: var(--bg-info-subtle-hover); }
+    .tr-card:hover .tr-lrow.is-suggested { border-color: var(--border-info-hover); }
     .tr-card:hover .tr-conn-path.is-linked { stroke: var(--border-positive-hover); }
     .tr-card:hover .tr-conn-path.is-suggested { stroke: var(--border-info-hover); }
     .tr-toggle { background: none; border: none; padding: 2px; display: flex; color: var(--content-subtle); cursor: pointer; border-radius: var(--radius-sm); flex-shrink: 0; }
@@ -737,10 +726,12 @@
     .tr-lrow.is-suggested { background: var(--bg-info-subtle); border-color: var(--border-info); }
     /* suggested → left card also blue */
     .tr-leftcard.is-suggested { background: var(--bg-info-subtle); border-color: var(--border-info); }
-    .tr-card:hover .tr-leftcard.is-suggested { background: var(--bg-info-subtle-hover); border-color: var(--border-info-hover); }
+    .tr-card:hover .tr-leftcard.is-suggested { border-color: var(--border-info-hover); }
     /* linked groups → light green */
     .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-leftcard.is-linked { background: var(--bg-positive-subtle); border-color: var(--border-positive); }
-    .tr-card:hover .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-card:hover .tr-leftcard.is-linked { background: var(--bg-positive-subtle-hover); border-color: var(--border-positive-hover); }
+    /* Hover changes the border only. The design system has no subtle-hover fill for info or
+       positive, and the border-hover tokens it does have are correct in both themes. */
+    .tr-card:hover .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-card:hover .tr-leftcard.is-linked { border-color: var(--border-positive-hover); }
     /* empty row — subtle placeholder that invites linking (plus appears on hover, right) */
     .tr-empty-wrap { display: flex; width: 100%; }
     /* small hover-intent delay so the "Select matching group" tip doesn't pop instantly */
