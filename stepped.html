@@ -824,6 +824,10 @@
 
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
+    .tr-conf-wrap { flex-shrink: 0; }
+    .tr-count.is-static { cursor: default; }
+    .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
+    .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
     .tr-conf-badge { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); background: none; border: none; padding: 0; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--content-info); white-space: nowrap; cursor: help; }
     .tr-conf-badge i { width: 12px; height: 12px; display: flex; }
     .tr-conf-tip { display: flex; flex-direction: column; gap: 3px; text-align: left; }
@@ -2207,6 +2211,7 @@ const state = {
   tab: 'pending',
   scenario: 'default',       // edge case the developer panel put the page in
   prevAvailable: true,       // false when the account has no earlier survey at all
+  overlapUI: 'dialog',       // how a suggestion's overlap detail opens: 'dialog' or 'popover'
   selected: new Set(),
   structFilter: new Set(),
   selectedSurvey: SURVEYS[0],
@@ -2360,6 +2365,12 @@ document.addEventListener('click', (e) => {
 // Prototype tooling, driven from the developer panel (⌘/Ctrl + .). A scenario only sets the
 // starting conditions; every render reads state.prevAvailable and state.selectedSurvey, so
 // picking a survey inside the "nothing selected" scenario recovers the normal flow by itself.
+const OVERLAP_UIS = [
+  { key: 'dialog', label: 'Tooltip, detail in the dialog',
+    note: 'The badge is a plain button. One line on hover, everything else in the members dialog.' },
+  { key: 'popover', label: 'Popover on the badge',
+    note: 'The badge discloses the rich card as a real popover: click opens it, focus moves in, Escape closes.' },
+];
 const SCENARIOS = [
   { key: 'default', label: 'Previous survey auto-selected',
     note: 'The happy path: the most recent completed survey in this project is picked for you.' },
@@ -3540,7 +3551,7 @@ function linkColumns(n, sug) {
       : '<div class="tt-demo"><button class="tr-lrow-x" data-treeunlink="' + esc(n.id) + '|' + esc(l.name) + '" aria-label="Remove link"><i data-icon="cross"></i></button><div class="tooltip is-above">Remove link</div></div>';
     // group size count, plus the overlap badge on suggested rows
     const countBadge = size === '' ? '' : (isS
-      ? '<button class="tr-count is-ovclick" data-matchpop="' + sug.id + '" data-ovclick="1" aria-label="' + size + ' participants in ' + esc(l.name) + '. Compare group members"><i data-icon="users"></i>' + size + '</button>'
+      ? '<span class="tr-count is-static"><i data-icon="users"></i>' + size + '<span class="sr-only"> participants</span></span>'
       : '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(l.name) + '" data-size="' + size + '" data-survey="' + esc(state.selectedSurvey) + '" aria-label="View ' + size + ' participants in ' + esc(l.name) + '"><i data-icon="users"></i>' + size + '</button><div class="tooltip is-above">View participants</div></div>');
     const originTag = isS
       ? '<div class="tt-demo tr-origin is-suggested" tabindex="0" role="img" aria-label="Suggested link"><i data-icon="lightbulb"></i><div class="tooltip is-above">Suggested link</div></div>'
@@ -3627,9 +3638,19 @@ function confBadge(sug) {
   if (!sug) return '';
   const o = overlapMembers(sug);
   // a real button, so the percentage is announced as a control instead of as stray text
-  // this and the participant count beside it open the same "Compare group members" dialog, so
-  // both name it: two different phrasings for one destination read as two places to go
-  return overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" aria-label="' + o.pct + '% of members are in both groups. Compare group members"', true);
+  // The overlap detail used to live in a hover card with a button inside it: unreachable by
+  // keyboard, and invisible on touch, where there is no hover at all.
+  const plain = o.shared + ' of ' + o.union + ' people are in both groups';
+  if (state.overlapUI === 'popover') {
+    // a real disclosure: click opens it, focus moves in, Escape closes
+    return overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="popover"' +
+      ' aria-expanded="false" aria-haspopup="dialog" aria-label="' + o.pct + '% member overlap. ' + esc(plain) + '. Show match details"', true);
+  }
+  // one line on hover, the rest in the dialog that already lists everyone
+  return '<span class="tt-demo tr-conf-wrap">' +
+    overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
+      ' aria-label="' + o.pct + '% member overlap. ' + esc(plain) + '. Compare group members"', true) +
+    '<div class="tooltip is-above">' + esc(plain) + '.</div></span>';
 }
 
 function matchPopHTML(sug) {
@@ -3661,7 +3682,8 @@ function openOverlapMembers(sug) {
     { label: 'participants in ' + o.prev, people: people(onlyPrev), open: false },
   ].filter(sec => sec.people.length);
   $('#members-title').textContent = 'Compare group members';
-  const cmpSub = $('#membersSubtitle'); if (cmpSub) { cmpSub.textContent = ''; cmpSub.hidden = true; }
+  const cmpSub = $('#membersSubtitle');
+  if (cmpSub) { cmpSub.textContent = o.pct + '% member overlap · ' + shared + ' of ' + o.union + ' people across ' + o.cur + ' and ' + o.prev + ' are in both groups.'; cmpSub.hidden = false; }
   membersState = { mode: 'sections', sections, filter: '', total: o.a + o.b - shared, totalLabel: o.cur + ' ↔ ' + o.prev };
   $('#membersSearch').value = '';
   renderMembers();
@@ -4837,7 +4859,12 @@ var showMatchPop = null;
   const pop = $('#matchPop');
   let closeTimer = null, currentKey = null;
   const clear = () => { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } };
-  const hide = () => { pop.hidden = true; currentKey = null; };
+  let heldBy = null;                 // the badge whose click is holding the popover open
+  const hide = () => {
+    pop.hidden = true; currentKey = null;
+    pop.removeAttribute('role'); pop.removeAttribute('aria-label');
+    if (heldBy) { heldBy.setAttribute('aria-expanded', 'false'); heldBy = null; }
+  };
   const scheduleHide = () => { clear(); closeTimer = setTimeout(hide, 140); };
   function position(anchor) {
     const r = anchor.getBoundingClientRect();
@@ -4848,8 +4875,10 @@ var showMatchPop = null;
     pop.style.left = Math.max(8, Math.min(left, window.innerWidth - pw - 8)) + 'px';
     pop.style.top = Math.max(8, top) + 'px';
   }
-  function show(anchor) {
+  function show(anchor, holder) {
     clear();
+    heldBy = holder || null;
+    if (holder) { pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Match details'); }
     let sug, key;
     if (anchor.dataset.matchpop != null) {
       const id = Number(anchor.dataset.matchpop);
@@ -4871,8 +4900,18 @@ var showMatchPop = null;
     if (btn) btn.addEventListener('click', () => { hide(); openOverlapMembers(sug); });
   }
   showMatchPop = show;
+  // a popover holding focus has to be dismissible, and give focus back where it came from
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || pop.hidden || !heldBy) return;
+    const back = heldBy; hide(); back.focus(); e.stopPropagation();
+  }, true);
+  document.addEventListener('click', (e) => {
+    if (pop.hidden || !heldBy) return;
+    if (e.target.closest && (e.target.closest('#matchPop') || e.target.closest('button.tr-conf-badge'))) return;
+    hide();
+  });
   document.addEventListener('mouseover', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count), [data-ovpop]:not(.tr-count)');
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
     if (a) show(a);
   });
   // the badge is a button, and its hover card cannot be reached by Tab (it hides when focus
@@ -4882,11 +4921,20 @@ var showMatchPop = null;
     const b = e.target.closest && e.target.closest('button.tr-conf-badge[data-matchpop]');
     if (!b) return;
     const sug = suggestions.find(x => x.id === Number(b.dataset.matchpop));
-    if (sug) { hide(); openOverlapMembers(sug); }
+    if (!sug) return;
+    if (b.dataset.overlapMode === 'popover') {
+      if (b.getAttribute('aria-expanded') === 'true') { hide(); b.setAttribute('aria-expanded', 'false'); b.focus(); return; }
+      show(b, b);
+      b.setAttribute('aria-expanded', 'true');
+      const first = pop.querySelector('button'); if (first) first.focus();
+      return;
+    }
+    hide(); openOverlapMembers(sug);
   });
   document.addEventListener('mouseout', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count), [data-ovpop]:not(.tr-count)');
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
     if (!a) return;
+    if (heldBy) return;                // a click is holding it open
     const to = e.relatedTarget;
     if (to && to.closest && (to.closest('[data-matchpop]') || to.closest('[data-ovpop]') || to.closest('#matchPop'))) return;
     scheduleHide();
@@ -4894,8 +4942,8 @@ var showMatchPop = null;
   pop.addEventListener('mouseenter', clear);
   pop.addEventListener('mouseleave', scheduleHide);
   document.addEventListener('focusin', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count), [data-ovpop]:not(.tr-count)');
-    if (a) show(a); else if (!e.target.closest || !e.target.closest('#matchPop')) scheduleHide();
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
+    if (a) show(a); else if (!heldBy && (!e.target.closest || !e.target.closest('#matchPop'))) scheduleHide();
   });
   window.addEventListener('scroll', hide, true);
 })();
@@ -4993,6 +5041,15 @@ function buildDevPanel() {
 }
 function renderDevPanel() {
   const body = $('#glDevBody'); if (!body) return;
+  const optRow = (list, current, attr) => list.map(sc =>
+    '<button class="gl-dev-opt' + (sc.key === current ? ' is-on' : '') + '" data-' + attr + '="' + sc.key + '"' +
+      ' aria-pressed="' + (sc.key === current) + '">' +
+      '<span class="gl-dev-radio" aria-hidden="true"></span>' +
+      '<span class="gl-dev-opt-body">' +
+        '<span class="gl-dev-opt-name">' + esc(sc.label) + '</span>' +
+        '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
+      '</span>' +
+    '</button>').join('');
   body.innerHTML = '<div class="gl-dev-label">Scenario</div>' + SCENARIOS.map(sc =>
     '<button class="gl-dev-opt' + (sc.key === state.scenario ? ' is-on' : '') + '" data-scenario="' + sc.key + '"' +
       ' aria-pressed="' + (sc.key === state.scenario) + '">' +
@@ -5001,7 +5058,8 @@ function renderDevPanel() {
         '<span class="gl-dev-opt-name">' + esc(sc.label) + '</span>' +
         '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
       '</span>' +
-    '</button>').join('');
+    '</button>').join('') +
+    '<div class="gl-dev-label">Suggestion overlap</div>' + optRow(OVERLAP_UIS, state.overlapUI, 'overlapui');
   icons();
 }
 function setDevPanel(open) {
@@ -5014,6 +5072,14 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest) return;
   const opt = e.target.closest('[data-scenario]');
   if (opt) { applyScenario(opt.dataset.scenario); return; }
+  const ov = e.target.closest('[data-overlapui]');
+  if (ov) {
+    state.overlapUI = ov.dataset.overlapui;
+    closeOverlays();
+    if (state.view === 'linking') renderLinking();
+    renderDevPanel(); icons();
+    return;
+  }
   if (e.target.closest('#glDevClose')) setDevPanel(false);
 });
 function inTextField(t) {
