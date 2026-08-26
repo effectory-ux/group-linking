@@ -825,8 +825,6 @@
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
     .tr-conf-wrap { flex-shrink: 0; }
-    /* a second line inside a tooltip, for what activating the control will do */
-    .tooltip .tt-hint { display: block; margin-top: var(--spacing-extra-tight); padding-top: var(--spacing-extra-tight); border-top: 1px solid var(--content-inverse-secondary); font-size: 12px; color: var(--content-inverse-secondary); }
     .tr-count.is-static { cursor: default; }
     .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
     .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
@@ -4152,13 +4150,14 @@ function confBadge(sug) {
       ' aria-expanded="false" aria-haspopup="dialog" aria-label="' + o.pct + '% member overlap. ' + esc(plain) + '. Show match details"', true);
   }
   // one line on hover, the rest in the dialog that already lists everyone
-  // the fact, then what activating it does. Named after the dialog it opens, so the hint and the
-  // place you land agree; no "click", which is wrong for touch and for the keyboard.
+  // Tooltips carry text and nothing else, so the affordance lives in the sentence: "See which"
+  // says activating it shows you the people, without a second element and without "click", which
+  // is wrong for touch and for the keyboard.
+  const invite = 'See which ' + o.shared + ' of the ' + o.union + ' people are in both groups';
   return '<span class="tt-demo tr-conf-wrap">' +
     overlapBadgeHTML(o.pct, ' data-matchpop="' + sug.id + '" data-overlap-mode="dialog"' +
-      ' aria-label="' + o.pct + '% member overlap. ' + esc(plain) + '. Compare group members"', true) +
-    '<div class="tooltip is-above">' + esc(plain) + '.' +
-    '<span class="tt-hint">Compare group members</span></div></span>';
+      ' aria-label="' + o.pct + '% member overlap. ' + esc(invite) + '"', true) +
+    '<div class="tooltip is-above">' + esc(invite) + '.</div></span>';
 }
 
 function matchPopHTML(sug) {
