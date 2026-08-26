@@ -775,7 +775,11 @@
     #linkPickerOverlay .mb-scroll { max-height: 52vh; }
     /* the backdrop fades with the morph instead of snapping in under it */
     #linkPickerOverlay { transition: background var(--motion-base) var(--ease-out); }
-    #linkPickerOverlay[style*="--gl-morph"] { background: rgb(0 0 0 / 0%); }
+    #linkPickerOverlay.is-morphing { background: rgb(0 0 0 / 0%); }
+    /* the clicked box, flying to the dialog's rectangle; the dialog fades in once it arrives */
+    .gl-morph-surface { position: fixed; pointer-events: none; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-base); box-shadow: var(--sh-action);
+                        transition: left 300ms var(--ease-out), top 300ms var(--ease-out), width 300ms var(--ease-out), height 300ms var(--ease-out), border-radius 300ms var(--ease-out), box-shadow 300ms var(--ease-out); }
+    .gl-morph-surface.is-arrived { border-radius: var(--radius-xl); box-shadow: var(--sh-dialogs); }
     #linkPickerMenu { display: flex; flex-direction: column; gap: var(--spacing-tight); }
     #linkPickerMenu .tlm-item { background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-base-tight) var(--spacing-base); transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
     #linkPickerMenu .tlm-item:not(.is-disabled):hover { border-color: var(--border-action-hover); box-shadow: var(--sh-action); background: var(--bg-base); }
@@ -3747,6 +3751,7 @@ $('#membersScroll').addEventListener('scroll', (e) => {
 // The picker opens as a panel anchored to the row it belongs to and grows out of it, rather than a
 // modal in the middle of the screen: it is a step inside the row's work, not a detour from it.
 var linkPickerReturn = null;
+var morphSurface = null, morphTimer = null;
 function openLinkPicker(fromRect, nodeId) {
   const node = findTreeNode(state.treeLinkingNodeId); if (!node) return;
   const ov = $('#linkPickerOverlay'), dlg = ov.querySelector('.dialog');
@@ -3754,25 +3759,45 @@ function openLinkPicker(fromRect, nodeId) {
   $('#linkPickerSearch').placeholder = 'Search groups in ' + surveyPlain(state.selectedSurvey);
   $('#linkPickerSearch').value = '';
   renderTreeLinkMenu('', '#linkPickerMenu');
-  ov.hidden = false;
-  // Morph: the dialog starts as the box that was clicked and grows into place, so the slot in the
-  // row and the dialog read as one object rather than two. Skipped for readers who asked for
-  // less motion, where it simply appears.
+  // Morph, the way the Codrops button-to-component demo does it: the CLICKED BOX flies to where
+  // the dialog will sit and grows into its rectangle, and only then does the dialog's content fade
+  // in inside it. Scaling the finished dialog would squish its content on the way; tweening a plain
+  // surface between the two rects never distorts anything. Skipped for readers who asked for less
+  // motion, where the dialog simply appears with the design system's own entry.
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduce && fromRect && fromRect.width) {
-    const d = dlg.getBoundingClientRect();
-    if (d.width && d.height) {
-      dlg.style.transformOrigin = 'top left';
-      dlg.style.transform = 'translate(' + (fromRect.left - d.left) + 'px,' + (fromRect.top - d.top) + 'px) scale(' +
-        (fromRect.width / d.width).toFixed(3) + ',' + (fromRect.height / d.height).toFixed(3) + ')';
-      dlg.style.opacity = '0';
-      ov.style.setProperty('--gl-morph', '0');
-      requestAnimationFrame(() => {
-        dlg.style.transition = 'transform 260ms var(--ease-out), opacity 200ms var(--ease-out)';
-        dlg.style.transform = 'none'; dlg.style.opacity = '1';
-        ov.style.removeProperty('--gl-morph');
-      });
-    }
+  if (reduce || !fromRect || !fromRect.width) {
+    ov.hidden = false;
+  } else {
+    if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
+    if (morphSurface) { morphSurface.remove(); morphSurface = null; }
+    // the design system pops every dialog in (dialog-pop animates transform); it sits out so the
+    // dialog holds still and invisible while the surface flies
+    dlg.style.animation = 'none';
+    dlg.style.transition = 'none';
+    dlg.style.opacity = '0';
+    ov.classList.add('is-morphing');            // backdrop starts clear, fades in during the flight
+    ov.hidden = false;
+    const d = dlg.getBoundingClientRect();       // where the surface is flying to
+    const s = document.createElement('div');
+    s.className = 'gl-morph-surface';
+    s.style.left = fromRect.left + 'px'; s.style.top = fromRect.top + 'px';
+    s.style.width = fromRect.width + 'px'; s.style.height = fromRect.height + 'px';
+    ov.insertBefore(s, dlg);                     // under the dialog, above the backdrop
+    morphSurface = s;
+    void s.offsetWidth;                          // commit the start frame, or only the end state ever paints
+    s.classList.add('is-arrived');               // radius and shadow become the dialog's
+    s.style.left = d.left + 'px'; s.style.top = d.top + 'px';
+    s.style.width = d.width + 'px'; s.style.height = d.height + 'px';
+    ov.classList.remove('is-morphing');
+    morphTimer = setTimeout(() => {              // the surface has arrived: reveal the content in it
+      morphTimer = null;
+      dlg.style.transition = 'opacity 140ms var(--ease-out), transform 140ms var(--ease-out)';
+      dlg.style.transform = 'translateY(6px)';
+      void dlg.offsetWidth;
+      dlg.style.transform = 'none';
+      dlg.style.opacity = '1';
+      setTimeout(() => { if (morphSurface === s) { s.remove(); morphSurface = null; } }, 160);
+    }, 300);
   }
   linkPickerReturn = nodeId || null;
   setTimeout(() => { const i = $('#linkPickerSearch'); if (i) i.focus({ preventScroll: true }); }, 60);
@@ -3781,7 +3806,10 @@ function closeLinkPicker() {
   const ov = $('#linkPickerOverlay'); if (!ov || ov.hidden) return;
   const dlg = ov.querySelector('.dialog');
   ov.hidden = true;
-  ['transition','transform','opacity','transformOrigin'].forEach(k => dlg.style[k] = '');
+  ['transition','transform','opacity','transformOrigin','animation'].forEach(k => dlg.style[k] = '');
+  ov.classList.remove('is-morphing');
+  if (morphTimer) { clearTimeout(morphTimer); morphTimer = null; }
+  if (morphSurface) { morphSurface.remove(); morphSurface = null; }
   const nodeId = linkPickerReturn; linkPickerReturn = null;
   state.treeLinkingNodeId = null; renderTree();
   if (nodeId) {
