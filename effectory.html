@@ -681,7 +681,7 @@
        neutral by default; blue only where the card is already blue (suggested) */
     .tr-card:hover .tr-leftcard { border-color: var(--border-action-hover); background: var(--bg-base-hover); }
     .tr-card:hover .tr-lrow:not(.is-empty) { border-color: var(--border-action-hover); background: var(--bg-base-hover); }
-    .tr-card:hover .tr-lrow.is-suggested { border-color: var(--border-info-hover); }
+    .tr-card:hover .tr-lrow.is-suggested { border-color: var(--border-info-hover); background: var(--bg-info-subtle-hover); }
     .tr-card:hover .tr-conn-path.is-linked { stroke: var(--border-positive-hover); }
     .tr-card:hover .tr-conn-path.is-suggested { stroke: var(--border-info-hover); }
     .tr-toggle { background: none; border: none; padding: 2px; display: flex; color: var(--content-subtle); cursor: pointer; border-radius: var(--radius-sm); flex-shrink: 0; }
@@ -726,12 +726,10 @@
     .tr-lrow.is-suggested { background: var(--bg-info-subtle); border-color: var(--border-info); }
     /* suggested → left card also blue */
     .tr-leftcard.is-suggested { background: var(--bg-info-subtle); border-color: var(--border-info); }
-    .tr-card:hover .tr-leftcard.is-suggested { border-color: var(--border-info-hover); }
+    .tr-card:hover .tr-leftcard.is-suggested { background: var(--bg-info-subtle-hover); border-color: var(--border-info-hover); }
     /* linked groups → light green */
     .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-leftcard.is-linked { background: var(--bg-positive-subtle); border-color: var(--border-positive); }
-    /* Hover changes the border only. The design system has no subtle-hover fill for info or
-       positive, and the border-hover tokens it does have are correct in both themes. */
-    .tr-card:hover .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-card:hover .tr-leftcard.is-linked { border-color: var(--border-positive-hover); }
+    .tr-card:hover .tr-rrow[data-linkstatus="linked"] .tr-lrow, .tr-card:hover .tr-leftcard.is-linked { background: var(--bg-positive-subtle-hover); border-color: var(--border-positive-hover); }
     /* empty row — subtle placeholder that invites linking (plus appears on hover, right) */
     .tr-empty-wrap { display: flex; width: 100%; }
     /* small hover-intent delay so the "Select matching group" tip doesn't pop instantly */
