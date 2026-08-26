@@ -828,6 +828,12 @@
     .tr-count.is-static { cursor: default; }
     .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
     .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
+    /* it opens the members dialog, so it has to read as a control and not as a number: the span
+       version in the link picker is informational and keeps the plain look */
+    button.tr-conf-badge { cursor: pointer; padding: 2px var(--spacing-tight); border: 1px solid var(--border-info-subtle); border-radius: var(--radius-sm); background: var(--bg-base); transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out); }
+    button.tr-conf-badge:hover { background: var(--bg-info-subtle); border-color: var(--border-info); }
+    /* the participant count next to it no longer opens anything, so it stops looking like it does */
+    .tr-count.is-static { border-color: transparent; padding-left: 0; }
     .tr-conf-badge { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); background: none; border: none; padding: 0; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--content-info); white-space: nowrap; cursor: help; }
     .tr-conf-badge i { width: 12px; height: 12px; display: flex; }
     .tr-conf-tip { display: flex; flex-direction: column; gap: 3px; text-align: left; }
