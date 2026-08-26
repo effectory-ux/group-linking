@@ -843,11 +843,10 @@
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
     .tr-conf-wrap { flex-shrink: 0; }
-    /* saving: the row's controls go quiet and a spinner sits where the actions were */
-    .tr-card.is-saving .tr-card-right > *:not(.tr-saving) { opacity: .4; pointer-events: none; }
-    .tr-card.is-saving .tr-leftcard { opacity: .7; }
-    .tr-saving { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-    .tr-card-right { position: relative; }
+    /* saving: the row's actions give way to a spinner, and the content it describes stays readable */
+    .tr-card.is-saving .tr-lrow-act > *:not(.tr-saving) { display: none; }
+    .tr-card.is-saving .tr-lrow, .tr-card.is-saving .tr-leftcard { pointer-events: none; }
+    .tr-saving { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; }
     .tr-count.is-static { cursor: default; }
     .tr-conf-badge[aria-expanded="true"] { color: var(--content-base); }
     .tr-conf-badge:focus-visible { outline: 2px solid var(--border-action-active); outline-offset: 2px; border-radius: var(--radius-sm); }
@@ -3309,7 +3308,10 @@ function saveLink(nodeId, work) {
   const s = document.createElement('div');
   s.className = 'tr-saving';
   s.innerHTML = '<span class="spinner spinner-sm" role="status" aria-label="Saving"></span>';
-  right.appendChild(s);
+  // in the row's action slot, not over the row: the group's name and count are already known, so
+  // they stay readable and the spinner stands where the buttons it is replacing were
+  const acts = [...right.querySelectorAll('.tr-lrow-act')];
+  (acts[acts.length - 1] || right).appendChild(s);
   setTimeout(() => {
     card.classList.remove('is-saving');
     if (s.parentNode) s.remove();                   // the re-render usually takes it; this covers the rest
