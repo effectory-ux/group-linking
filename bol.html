@@ -632,7 +632,13 @@
        base→base-hover / secondary→secondary-hover logic. */
         /* the design system has no subtle-hover step for info or positive; both are the next
        palette step down, the same way the suggestion hover was picked */
-    :root { --gl-gutter: 60px; --bg-info-subtle-hover: #d8e6fd; --bg-positive-subtle-hover: var(--p-color-green-200); }
+    /* The design system has no subtle-hover step, so these are local. Mixing each subtle fill
+       toward its OWN accent moves it the right way in either theme: deeper on a light surface,
+       lighter on a dark one. The previous values were light-mode hex, which turned the linked and
+       suggested rows almost white on hover in dark mode. */
+    :root { --gl-gutter: 60px;
+            --bg-info-subtle-hover: color-mix(in srgb, var(--bg-info-subtle) 88%, var(--content-info));
+            --bg-positive-subtle-hover: color-mix(in srgb, var(--bg-positive-subtle) 88%, var(--content-positive)); }
     .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-tight); padding: var(--spacing-base-tight) 0 var(--spacing-tight); background: var(--bg-interface-body); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     .tr-cols span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
