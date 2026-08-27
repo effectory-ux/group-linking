@@ -825,8 +825,7 @@
     .tr-nostruct-panel { grid-column: 3; display: flex; justify-content: center; padding: var(--spacing-super-loose) 0; background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-md); }
     /* follows the scroll, so the reason stays in view down a long list */
     .tr-nostruct-msg { position: sticky; top: calc(var(--gl-sticky-top, 0px) + var(--spacing-super-loose)); display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--spacing-tight); max-width: 320px; padding: 0 var(--spacing-base); }
-    .tr-nostruct-msg > i { width: 20px; height: 20px; display: flex; flex-shrink: 0; color: var(--content-info); }
-    .tr-nostruct-title { font-weight: var(--font-weight-semibold); color: var(--content-primary); }
+    .tr-nostruct-title { font-weight: 600; color: var(--content-primary); }
     .tr-nostruct-sub { color: var(--content-secondary); }
     .tr-nostruct-title, .tr-nostruct-sub { font-size: 14px; line-height: 1.4; }
     .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
@@ -4000,7 +3999,6 @@ function renderTree() {
   if (missing) {
     body.insertAdjacentHTML('beforeend',
       '<div class="tr-nostruct-fill" aria-hidden="true"><div class="tr-nostruct-panel"><div class="tr-nostruct-msg">' +
-        '<i data-icon="info"></i>' +
         '<div><div class="tr-nostruct-title">No ' + esc(state.treeStructure.toLowerCase()) + ' in this survey</div>' +
         '<div class="tr-nostruct-sub">There is nothing to link these groups to.</div></div>' +
       '</div></div></div>');
