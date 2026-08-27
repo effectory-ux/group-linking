@@ -396,16 +396,13 @@
 
 
     /* ── Structure (in-page) ── */
-    .tr-controls { display: flex; align-items: flex-end; gap: var(--spacing-base-tight); flex-wrap: wrap; padding: 0 0 var(--spacing-base); }
+    /* Search and filters keep the bar the structure selector used to share, minus the tint: that
+       came from the structure, which now names itself in the column heads. */
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-bottom: var(--spacing-base); padding: var(--spacing-base-tight); background: var(--bg-tertiary); border-radius: var(--radius-lg); }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
     /* Structure selector — colored dropdown tinted by the structure's own colour, inside a grey bar with progress */
-    .struct-picker { position: sticky; top: 0; z-index: 25; background: var(--bg-base); padding-bottom: var(--spacing-base-tight); }
-    .struct-bar { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-base); background: var(--bg-secondary); border-radius: var(--radius-lg); padding: var(--spacing-base-tight); }
-    .struct-bar.is-blue { background: color-mix(in srgb, var(--bg-info-subtle) 55%, var(--bg-base)); }
-    .struct-bar.is-green { background: color-mix(in srgb, var(--bg-positive-subtle) 55%, var(--bg-base)); }
-    .struct-bar.is-orange { background: color-mix(in srgb, var(--bg-warning-subtle) 55%, var(--bg-base)); }
     .struct-progress { display: flex; align-items: center; gap: var(--spacing-tight); }
     .struct-prog-item { display: flex; align-items: center; font-size: 12px; font-weight: 500; color: var(--content-secondary); white-space: nowrap; }
     .struct-prog-sep { color: var(--content-subtle); font-size: 16px; line-height: 1; }
@@ -583,9 +580,9 @@
     .shift-tip-close i { width: 14px; height: 14px; display: flex; }
     /* the label and the chips move to their own line together: the chips splitting across two
        rows while the label stays behind reads as two separate controls */
-    .struct-bar .tr-filter-group { flex: 1 1 auto; display: flex; align-items: center; gap: var(--spacing-base-tight); justify-content: flex-end; }
+    .tr-controls .tr-filter-group { display: flex; align-items: center; gap: var(--spacing-base-tight); flex-shrink: 0; }
     .tr-filter-label { flex-shrink: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
-    .struct-bar .tr-filters { min-width: 0; justify-content: flex-end; flex-wrap: nowrap; }
+    .tr-controls .tr-filters { min-width: 0; flex-wrap: nowrap; }
     .tr-filter { font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; font-size: 14px; font-weight: 500; line-height: 22px; color: var(--content-action); background: var(--bg-input); border: 1px solid var(--border-action); border-radius: var(--radius-base); box-shadow: var(--sh-action); padding: 6px var(--spacing-base-tight); cursor: pointer; white-space: nowrap; transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
     .tr-filter:hover { border-color: var(--border-action-hover); box-shadow: var(--sh-action-hover); }
     .tr-filter.is-active { color: var(--content-base); background: var(--bg-secondary); border-color: var(--border-action-hover); }
@@ -610,10 +607,16 @@
     :root { --gl-gutter: 60px; }
     .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-tight); padding: var(--spacing-base-tight) 0 var(--spacing-tight); background: var(--bg-interface-body); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
-    .tr-cols span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
+    /* direct children only: the heads now hold a structure selector, which has its own type */
+    .tr-cols > span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
     /* align each header with the left edge of its column's cards */
-    .tr-cols span:first-child { grid-column: 1; }
-    .tr-cols span:last-child { grid-column: 3; }
+    .tr-cols > span:first-child { grid-column: 1; }
+    .tr-cols > span:last-child { grid-column: 3; }
+    /* Whose column it is, and which of that survey's structures it shows. One selector per column,
+       under the survey it belongs to, so neither has to say which survey it applies to. */
+    .tr-colhead { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-tight); min-width: 0; }
+    .tr-colhead-survey { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .struct-select.is-nomatch { background: var(--bg-secondary); border-color: var(--border-base); color: var(--content-secondary); font-style: italic; }
 
     /* Two columns of cards + a middle connector column */
     .tr-card { margin-bottom: var(--spacing-tight); position: relative; }
@@ -1003,12 +1006,11 @@
     }
     @media (max-width: 900px) {
       /* the toolbar was 215px tall and pinned; on a phone it scrolls along like content */
-      .struct-picker { position: static; padding-bottom: var(--spacing-tight); }
       .struct-select-wrap, .struct-select { width: 100%; }
       /* the chips become one horizontally scrollable row instead of a ragged wrap */
-      .struct-bar .tr-filter-group { min-width: 0; }
-      .struct-bar .tr-filters { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: var(--spacing-extra-tight); scrollbar-width: none; }
-      .struct-bar .tr-filters::-webkit-scrollbar { display: none; }
+      .tr-controls .tr-filter-group { min-width: 0; }
+      .tr-controls .tr-filters { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: var(--spacing-extra-tight); scrollbar-width: none; }
+      .tr-controls .tr-filters::-webkit-scrollbar { display: none; }
       .tr-filter { flex-shrink: 0; white-space: nowrap; }
     }
     /* the hamburger: hidden on desktop; declared here at the end so nothing outranks it */
@@ -1378,19 +1380,6 @@
             <!-- Review call-to-action -->
             <div class="gl-cta" id="sugBanner" hidden></div>
 
-            <!-- Structure picker -->
-            <div class="struct-picker">
-              <div class="struct-bar">
-                <div class="struct-select-wrap">
-                  <button class="struct-select" id="structSelect" aria-haspopup="menu" aria-expanded="false" aria-controls="structMenu"></button>
-                  <div class="struct-menu" id="structMenu" role="menu" aria-label="Structure" hidden></div>
-                </div>
-                <div class="tr-filter-group" role="group" aria-labelledby="treeFilterLabel">
-                  <span class="tr-filter-label" id="treeFilterLabel">Filter</span>
-                  <div class="tr-filters" id="treeFilters"></div>
-                </div>
-              </div>
-            </div>
 
             <div class="tr-scope">
             <div class="tr-filter-desc" id="treeFilterDesc" hidden></div>
@@ -1399,6 +1388,10 @@
               <div class="search-wrap">
                 <span class="search-icon"><i data-icon="search"></i></span>
                 <input type="search" class="srch" id="treeSearch" aria-label="Search groups in either survey by name" placeholder="Search by group name" />
+              </div>
+              <div class="tr-filter-group" role="group" aria-labelledby="treeFilterLabel">
+                <span class="tr-filter-label" id="treeFilterLabel">Filter</span>
+                <div class="tr-filters" id="treeFilters"></div>
               </div>
             </div>
             <div class="bulk-bar" id="bulkBar" hidden>
@@ -1422,7 +1415,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
-              <div class="tr-cols" id="treeCols"><span>Current survey</span><span id="trColPrev">Thriving Workplace Pulse April 2026</span></div>
+              <div class="tr-cols" id="treeCols"><span class="tr-colhead" id="trColCur"></span><span class="tr-colhead" id="trColPrev"></span></div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
@@ -2002,8 +1995,19 @@ const HISTORICAL_BY_STRUCT = {
 // set up after that survey ran. Then there is nothing on the other side to link to, for that
 // structure alone; the others are unaffected.
 function prevHasStructure(name) { return !state.prevMissingStructures.has(name); }
+// Which structure of the previous survey a structure of this survey links into. The same name by
+// default, since that is nearly always right; the previous-survey column head is where it changes.
+// null means nothing on the other side, either because the name is not there or because it was set
+// to "no match".
+function prevStructures() { return STRUCTURES.filter(prevHasStructure); }
+function prevStructureFor(name) {
+  if (Object.prototype.hasOwnProperty.call(state.prevStructureMap, name)) return state.prevStructureMap[name];
+  return prevHasStructure(name) ? name : null;
+}
+function prevStructure() { return prevStructureFor(state.treeStructure); }
 function histGroups() {
-  return HISTORICAL_BY_STRUCT[state.treeStructure] || HISTORICAL_GROUPS;
+  const p = prevStructure();
+  return p ? (HISTORICAL_BY_STRUCT[p] || HISTORICAL_GROUPS) : [];
 }
 
 const TREES = {
@@ -2212,6 +2216,7 @@ const state = {
   prevAvailable: true,       // false when the account has no earlier survey at all
   overlapUI: 'dialog',       // how a suggestion's overlap detail opens: 'dialog' or 'popover'
   prevMissingStructures: new Set(),   // structures this survey has that the previous one never had
+  prevStructureMap: {},               // this survey's structure -> the previous survey's structure it links into
   selected: new Set(),
   structFilter: new Set(),
   selectedSurvey: SURVEYS[0],
@@ -2504,7 +2509,7 @@ function updateAccSummaries() {
   const sLink = $('#accLinkSummary');
   if (sLink) {
     if (linkingBlocked()) sLink.textContent = '';
-    else if (!prevHasStructure(state.treeStructure)) sLink.textContent = state.treeStructure + ' is not in the previous survey';
+    else if (!prevStructure()) sLink.textContent = state.treeStructure + ' is not linked to a structure yet';
     else { const p = structProgress(state.treeStructure); sLink.textContent = p.linked + ' of ' + p.total + ' linked · ' + p.suggested + ' suggestion' + (p.suggested === 1 ? '' : 's'); }
   }
 }
@@ -2522,17 +2527,16 @@ function openAcc(which, open) {
     setTimeout(() => { if (el.classList.contains('is-open')) { el.classList.add('is-settled'); updateStickyOffsets(); syncStuckChrome(); } }, 340);
   }
 }
-// keep the column headers pinned just below the sticky structure bar
+// Nothing sticks above the column headers any more: the structure selectors moved into them, so
+// the bar that used to sit there is gone and they pin to the top of the scroller themselves.
 function updateStickyOffsets() {
-  const sp = document.querySelector('.struct-picker');
-  if (!sp) return;
-  document.documentElement.style.setProperty('--gl-sticky-top', Math.round(sp.getBoundingClientRect().height) + 'px');
+  document.documentElement.style.setProperty('--gl-sticky-top', '0px');
 }
 // The structure bar and column headers stick to the top of the scroller. While they are
 // pinned, the accordion's border and shadow read as chrome floating behind them, so drop it.
 function syncStuckChrome() {
   const acc = document.querySelector('#acc-link');
-  const sp = acc && acc.querySelector('.struct-picker');
+  const sp = acc && acc.querySelector('.tr-cols');
   const main = $('#appMain');
   if (!acc || !sp || !main) return;
   const stuck = acc.classList.contains('is-open') &&
@@ -2641,33 +2645,104 @@ function structProgress(name) {
   })(TREES[name]);
   return { total, linked, suggested, pct: total ? Math.round(linked / total * 100) : 0 };
 }
-// Colored structure dropdown — the selected structure tints the control with its own colour.
+// One structure selector per table column, each under the survey it belongs to. The left one picks
+// what you are working on; the right one picks which of the previous survey's structures those
+// groups link into. Both are the same control, so they share their markup and their keyboard.
+function structMenuFor(side) { return document.querySelector('.struct-menu[data-structmenu="' + side + '"]'); }
+function closeStructMenus() { document.querySelectorAll('.struct-menu').forEach(m => { m.hidden = true; }); }
+function structOptionHTML(name, selected, side, sub) {
+  const m = STRUCT_META[name] || { icon: 'structure', color: 'blue' };
+  return '<button type="button" role="menuitemradio" aria-checked="' + selected + '" class="struct-mi' +
+      (selected ? ' is-selected' : '') + '" data-structpick="' + esc(name) + '" data-structside="' + side + '">' +
+    '<span class="struct-mi-icon is-' + m.color + '"><i data-icon="' + m.icon + '"></i></span>' +
+    '<span class="struct-mi-body"><span class="struct-mi-name">' + esc(name) + '</span>' +
+    (sub ? '<span class="struct-mi-sub">' + sub + '</span>' : '') + '</span>' +
+    (selected ? '<i class="struct-mi-check" data-icon="check"></i>' : '') +
+    '</button>';
+}
+function structSelectHTML(side, label, current, options) {
+  const m = current ? (STRUCT_META[current] || { icon: 'structure', color: 'blue' }) : null;
+  return '<span class="struct-select-wrap">' +
+      '<button class="struct-select ' + (m ? 'is-' + m.color : 'is-nomatch') + '" data-structbtn="' + side +
+        '" aria-haspopup="menu" aria-expanded="false" aria-label="' + label + '">' +
+        '<i class="struct-select-icon" data-icon="' + (m ? m.icon : 'minus') + '"></i>' +
+        '<span class="struct-select-val">' + (current ? esc(current) : 'No match yet') + '</span>' +
+        '<i class="struct-select-chev" data-icon="chevron-down"></i>' +
+      '</button>' +
+      '<div class="struct-menu" data-structmenu="' + side + '" role="menu" aria-label="' + label + '" hidden>' +
+        options + '</div>' +
+    '</span>';
+}
 function renderStructCards() {
-  const btn = $('#structSelect'); if (!btn) return;
-  const cur = STRUCT_META[state.treeStructure] || { icon: 'structure', color: 'blue' };
-  btn.className = 'struct-select is-' + cur.color;
-  const bar = document.querySelector('.struct-bar'); if (bar) bar.className = 'struct-bar is-' + cur.color;
-  btn.innerHTML = '<i class="struct-select-icon" data-icon="' + cur.icon + '"></i>' +
-    '<span class="struct-select-val">' + esc(state.treeStructure) + '</span>' +
-    '<i class="struct-select-chev" data-icon="chevron-down"></i>';
-  const menu = $('#structMenu');
-  menu.innerHTML = STRUCTURES.map(name => {  /* options rendered below */
-    const m = STRUCT_META[name] || { icon: 'structure', color: 'blue' };
+  const cur = $('#trColCur'), prev = $('#trColPrev');
+  if (!cur || !prev) return;
+
+  // left: the structures of this survey, with how far each one has got
+  const curOptions = STRUCTURES.map(name => {
+    const m = STRUCT_META[name] || {};
     const p = structProgress(name);
     const st = p.pct === 100 ? 'is-all' : p.linked > 0 ? 'is-partial' : 'is-none';
-    const sel = name === state.treeStructure;
-    const sub = !prevHasStructure(name)
-      ? (m.primary ? 'Inviting structure · ' : '') + 'Not in the previous survey'
+    const sub = !prevStructureFor(name)
+      ? (m.primary ? 'Inviting structure · ' : '') + 'Not linked to a structure yet'
       : (m.primary ? 'Inviting structure · ' : '') +
         '<span class="struct-mi-count ' + st + '">' + p.linked + ' of ' + p.total + '</span> linked';
-    return '<button type="button" role="menuitemradio" aria-checked="' + sel + '" class="struct-mi' + (sel ? ' is-selected' : '') + '" data-structpick="' + esc(name) + '">' +
-      '<span class="struct-mi-icon is-' + m.color + '"><i data-icon="' + m.icon + '"></i></span>' +
-      '<span class="struct-mi-body"><span class="struct-mi-name">' + esc(name) + '</span>' +
-      '<span class="struct-mi-sub">' + sub + '</span></span>' +
-      (sel ? '<i class="struct-mi-check" data-icon="check"></i>' : '') +
-      '</button>';
+    return structOptionHTML(name, name === state.treeStructure, 'cur', sub);
   }).join('');
+  cur.innerHTML = '<span class="tr-colhead-survey">Current survey · ' + surveyHTML(CURRENT_SURVEY) + '</span>' +
+    structSelectHTML('cur', 'Structure in this survey', state.treeStructure, curOptions);
+
+  // right: the structures the previous survey has, plus the option of no match at all
+  const mapped = prevStructure();
+  const prevOptions = prevStructures().map(name => {
+    const used = STRUCTURES.find(n => n !== state.treeStructure && prevStructureFor(n) === name);
+    return structOptionHTML(name, name === mapped, 'prev',
+      used ? 'Already linked from ' + esc(used.toLowerCase()) : '');
+  }).join('') +
+    '<button type="button" role="menuitemradio" aria-checked="' + (mapped === null) + '" class="struct-mi' +
+      (mapped === null ? ' is-selected' : '') + '" data-structpick="" data-structside="prev">' +
+      '<span class="struct-mi-icon"><i data-icon="minus"></i></span>' +
+      '<span class="struct-mi-body"><span class="struct-mi-name">No match yet</span>' +
+      '<span class="struct-mi-sub">Nothing in that survey to compare these groups with</span></span>' +
+      (mapped === null ? '<i class="struct-mi-check" data-icon="check"></i>' : '') +
+    '</button>';
+  // the panel over the column is decorative to a screen reader (it cannot be a child of the
+  // rowgroup), so the reason rides along on the column head, where it costs no height
+  prev.innerHTML = '<span class="tr-colhead-survey">' + surveyHTML(state.selectedSurvey || '') +
+      (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
+        esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '') + '</span>' +
+    structSelectHTML('prev', 'Structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
+                     mapped, prevOptions);
   icons();
+}
+// Changing the right selector changes what every group on this structure links into, so links made
+// against the old one cannot survive it.
+function structureLinkCount(name) {
+  let n = 0;
+  (function walk(nodes) {
+    (nodes || []).forEach(x => { if (x.links && x.links.length) n++; if (x.children) walk(x.children); });
+  })(TREES[name]);
+  return n;
+}
+function clearStructureLinks(name) {
+  (function walk(nodes) {
+    (nodes || []).forEach(x => { x.links = []; x.noMatch = false; if (x.children) walk(x.children); });
+  })(TREES[name]);
+}
+function setPrevStructure(picked) {
+  const from = state.treeStructure;
+  if (prevStructureFor(from) === picked) return;
+  const had = structureLinkCount(from);
+  if (had && !confirm(had + (had === 1 ? ' group is' : ' groups are') + ' already linked in ' +
+      from.toLowerCase() + '. Changing the structure on the other side removes ' +
+      (had === 1 ? 'that link' : 'those links') + '. Continue?')) return;
+  state.prevStructureMap[from] = picked;
+  if (had) clearStructureLinks(from);
+  state.treeLinkingNodeId = null;
+  state.treeStatusFilter.clear();
+  clearTreeSelection();
+  renderStructCards(); renderTree(); updateAccSummaries();
+  toast(picked ? from + ' now links into ' + picked.toLowerCase()
+               : from + ' has no structure to link into');
 }
 
 function typeTag(s) {
@@ -3023,20 +3098,24 @@ document.addEventListener('click', (e) => {
   }
   // structure dropdown — toggle, select, or close on outside click
   const spick = e.target.closest('[data-structpick]');
-  const structMenu = $('#structMenu');
+  const sbtn = e.target.closest('[data-structbtn]');
   if (spick) {
-    if (state.treeStructure !== spick.dataset.structpick) {
+    // the "Continue in ..." buttons elsewhere carry no side, and they mean the left one
+    if ((spick.dataset.structside || 'cur') === 'prev') setPrevStructure(spick.dataset.structpick || null);
+    else if (state.treeStructure !== spick.dataset.structpick) {
       state.treeStructure = spick.dataset.structpick;
       state.treeLinkingNodeId = null;
       state.treeStatusFilter.clear();   // reset the filter to "All groups" on structure switch
       clearTreeSelection();
       renderStructCards(); renderTree(); updateAccSummaries();
     }
-    if (structMenu) structMenu.hidden = true;
-  } else if (e.target.closest('#structSelect')) {
-    if (structMenu) structMenu.hidden = !structMenu.hidden;
-  } else if (structMenu && !e.target.closest('#structMenu')) {
-    structMenu.hidden = true;
+    closeStructMenus();
+  } else if (sbtn) {
+    const m = structMenuFor(sbtn.dataset.structbtn), wasClosed = m && m.hidden;
+    closeStructMenus();
+    if (m && wasClosed) m.hidden = false;
+  } else if (!e.target.closest('.struct-menu')) {
+    closeStructMenus();
   }
   syncStructExpanded();
   // close the inline link picker when clicking outside it (but not while its dialog is open)
@@ -3488,9 +3567,9 @@ function joinNames(list) {
 }
 function rowSummary(n) {
   const dot = t => /\.$/.test(t) ? t : t + '.';   // "Effectory B.V." already ends in one
-  // the structure is not in the previous survey, so whatever links the data holds are not shown
+  // nothing on the other side for this structure, so whatever links the data holds are not shown
   // and must not be announced either
-  if (!prevHasStructure(state.treeStructure)) return esc(n.name) + '.';
+  if (!prevStructure()) return esc(n.name) + '.';
   if (n.noMatch) return esc(n.name) + ' is marked as having no matching group.';
   if (!n.links.length) return esc(n.name) + ' has no link yet.';
   const isSug = l => l.status === 'suggested' || l.status === 'review';
@@ -3509,7 +3588,7 @@ function treeRowHTML(n, level, ancestors) {
   const cols = linkColumns(n, sug);
   const isSel = state.treeSelected.has(n.id);
   // same reason the right cell is empty: nothing is linked while the other side has no structure
-  const shownLinks = prevHasStructure(state.treeStructure) ? n.links : [];
+  const shownLinks = prevStructure() ? n.links : [];
   const hasLinked = shownLinks.some(l => l.status === 'linked');
   const hasSuggested = !hasLinked && shownLinks.some(l => l.status === 'suggested' || l.status === 'review');
   const leftState = hasLinked ? ' is-linked' : (hasSuggested ? ' is-suggested' : '');
@@ -3522,7 +3601,7 @@ function treeRowHTML(n, level, ancestors) {
     '<div class="tr-leftcol" role="cell">' +
     '<div class="tr-leftcard' + leftState + '">' +
     // the checkbox leads only to bulk linking, which is equally impossible here
-    (!prevHasStructure(state.treeStructure) ? '' :
+    (!prevStructure() ? '' :
       '<span class="tr-check' + (isSel ? ' is-checked' : '') + '" data-treecheck="' + esc(n.id) + '" role="checkbox" aria-checked="' + isSel + '" tabindex="0" aria-label="Select ' + esc(n.name) + '"><i data-icon="check"></i></span>') +
     (hasChildren
       ? '<button class="tr-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
@@ -3539,7 +3618,7 @@ function treeRowHTML(n, level, ancestors) {
     (n.size ? '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(n.name) + '" data-size="' + n.size + '" data-survey="' + esc(CURRENT_SURVEY) + '" aria-label="View ' + n.size + ' participants in ' + esc(n.name) + '"><i data-icon="users"></i>' + n.size + '</button><div class="tooltip is-above">View participants</div></div>' : '') +
     '</div>' +
     // no add button where nothing can be linked: it would offer an action with no destination
-    (!prevHasStructure(state.treeStructure) ? ''
+    (!prevStructure() ? ''
       : state.treeLinkingNodeId === n.id
       ? '<div class="tr-add-slot tt-demo" style="visibility:hidden"><button class="tr-add-btn" tabindex="-1"><i data-icon="plus"></i></button></div>'
       : '<div class="tr-add-slot tt-demo"><button class="tr-add-btn" data-treeadd="' + esc(n.id) + '" aria-label="' + (n.links.length ? 'Link another group' : 'Link a group') + '"><i data-icon="plus"></i></button><div class="tooltip is-below">' + (n.links.length ? 'Link another group' : 'Link a group') + '</div></div>') +
@@ -3579,7 +3658,7 @@ function linkSearchBoxHTML() {
 function linkColumns(n, sug) {
   // nothing on the other side for this structure: no slot to fill and no line to draw. The
   // message is one panel over the whole column (see renderTree), not a note per row.
-  if (!prevHasStructure(state.treeStructure)) return { mid: '', right: '' };
+  if (!prevStructure()) return { mid: '', right: '' };
   if (n.links.length === 0) {
     if (state.treeLinkingNodeId === n.id) {
       const right = '<div class="tr-rrow">' + linkSearchBoxHTML() + '</div>';
@@ -3936,7 +4015,7 @@ function setTreeTableRoles(on) {
 function renderTree() {
   // The structure and its groups stay: it is only the previous survey that has nothing to offer,
   // so the message sits in that column and the left side reads as usual.
-  const missing = !prevHasStructure(state.treeStructure);
+  const missing = !prevStructure();
   const fgroup = document.querySelector('.tr-filter-group');
   if (fgroup) fgroup.hidden = missing;   // every group is unlinked here, so the counts say nothing
   renderTreeFilters();
@@ -3953,7 +4032,7 @@ function renderTree() {
     // suggest continuing in another structure that still has groups to link
     const nextStruct = STRUCTURES.find(name => {
       if (name === state.treeStructure) return false;
-      if (!prevHasStructure(name)) return false;      // nothing to carry on with there
+      if (!prevStructureFor(name)) return false;      // nothing to carry on with there
       const p = structProgress(name);
       return p.linked < p.total || p.suggested > 0;
     });
@@ -4011,8 +4090,9 @@ function renderTree() {
   if (missing) {
     body.insertAdjacentHTML('beforeend',
       '<div class="tr-nostruct-fill" aria-hidden="true"><div class="tr-nostruct-panel"><div class="tr-nostruct-msg">' +
-        '<div><div class="tr-nostruct-title">No ' + esc(state.treeStructure.toLowerCase()) + ' in this survey</div>' +
-        '<div class="tr-nostruct-sub">There is nothing to link these groups to.</div></div>' +
+        '<div><div class="tr-nostruct-title">No structure chosen</div>' +
+        '<div class="tr-nostruct-sub">Pick a structure above to link these ' +
+        esc(state.treeStructure.toLowerCase()) + ' groups to.</div></div>' +
       '</div></div></div>');
   }
 
@@ -4080,14 +4160,7 @@ function renderTree() {
   });
   const input = $('#treeLinkSearch');
   if (input) { renderTreeLinkMenu(''); positionInlineLinkMenu(); wirePickerKeys(input, '#treeLinkMenu'); input.addEventListener('input', () => { renderTreeLinkMenu(input.value); positionInlineLinkMenu(); }); setTimeout(() => input.focus({ preventScroll: true }), 0); }
-  // the panel over the column is decorative to a screen reader (it cannot be a child of the
-  // rowgroup), so the same reason rides along on the column header, where it costs no height
-  const prevHead = $('#trColPrev');
-  if (prevHead) prevHead.innerHTML = surveyHTML(state.selectedSurvey) +
-    (!prevHasStructure(state.treeStructure)
-      ? '<span class="sr-only">. No ' + esc(state.treeStructure.toLowerCase()) +
-        ' in this survey, so there is nothing to link these groups to.</span>'
-      : '');
+  renderStructCards();   // the column heads carry the two structure selectors
   syncSelectionUI(body);
   tagTreePositions();
   if (sheetNodeId && !document.getElementById('groupSheetOverlay').hidden) renderGroupSheet();
@@ -4987,29 +5060,36 @@ document.addEventListener('keydown', (e) => {
 
 /* ═══════════════ STRUCTURE MENU KEYBOARD ═══════════════ */
 function syncStructExpanded() {
-  const b = $('#structSelect'), m = $('#structMenu');
-  if (b && m) b.setAttribute('aria-expanded', String(!m.hidden));
-}
-(function () {
-  const btn = $('#structSelect'), menu = $('#structMenu');
-  if (!btn || !menu) return;
-  const items = () => [...menu.querySelectorAll('[data-structpick]')];
-  const focusItem = (i) => { const list = items(); if (list.length) list[(i + list.length) % list.length].focus(); };
-  btn.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      menu.hidden = false; syncStructExpanded();
-      focusItem(e.key === 'ArrowDown' ? 0 : -1);
-    }
+  document.querySelectorAll('[data-structbtn]').forEach(b => {
+    const m = structMenuFor(b.dataset.structbtn);
+    b.setAttribute('aria-expanded', String(!!(m && !m.hidden)));
   });
-  menu.addEventListener('keydown', (e) => {
-    const list = items();
-    const i = list.indexOf(document.activeElement);
-    if (e.key === 'ArrowDown') { e.preventDefault(); focusItem(i + 1); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); focusItem(i - 1); }
-    else if (e.key === 'Home') { e.preventDefault(); focusItem(0); }
-    else if (e.key === 'End') { e.preventDefault(); focusItem(-1); }
-    else if (e.key === 'Escape') { e.stopPropagation(); menu.hidden = true; syncStructExpanded(); btn.focus(); }
+}
+// Delegated: both selectors are rendered on every pass, so nothing can be captured at load.
+(function () {
+  const items = menu => [...menu.querySelectorAll('[data-structpick]')];
+  const focusItem = (menu, i) => { const l = items(menu); if (l.length) l[(i + l.length) % l.length].focus(); };
+  document.addEventListener('keydown', (e) => {
+    if (!e.target.closest) return;
+    const btn = e.target.closest('[data-structbtn]');
+    if (btn && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      const m = structMenuFor(btn.dataset.structbtn); if (!m) return;
+      e.preventDefault();
+      closeStructMenus(); m.hidden = false; syncStructExpanded();
+      focusItem(m, e.key === 'ArrowDown' ? 0 : -1);
+      return;
+    }
+    const menu = e.target.closest('.struct-menu'); if (!menu) return;
+    const l = items(menu), i = l.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); focusItem(menu, i + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); focusItem(menu, i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); focusItem(menu, 0); }
+    else if (e.key === 'End') { e.preventDefault(); focusItem(menu, -1); }
+    else if (e.key === 'Escape') {
+      e.stopPropagation(); menu.hidden = true; syncStructExpanded();
+      const b = document.querySelector('[data-structbtn="' + menu.dataset.structmenu + '"]');
+      if (b) b.focus();
+    }
   });
 })();
 
@@ -5186,22 +5266,20 @@ var showMatchPop = null;
 // header offsets in sync with the (responsive, wrapping) structure bar height.
 (function () {
   const cols = document.querySelector('.tr-cols');
-  const sp = document.querySelector('.struct-picker');
   const scroller = document.querySelector('.app-main');
-  if (!cols || !sp || !scroller) return;
+  if (!cols || !scroller) return;
   let obs = null;
   const refresh = () => {
     updateStickyOffsets();
     if (!window.IntersectionObserver) return;
-    const h = Math.round(sp.getBoundingClientRect().height);
     if (obs) obs.disconnect();
     obs = new IntersectionObserver(
       ([e]) => cols.classList.toggle('is-stuck', e.intersectionRatio < 1),
-      { root: scroller, threshold: [1], rootMargin: (-(h + 1)) + 'px 0px 0px 0px' }
+      { root: scroller, threshold: [1], rootMargin: '-1px 0px 0px 0px' }
     );
     obs.observe(cols);
   };
-  if (window.ResizeObserver) new ResizeObserver(refresh).observe(sp);
+  if (window.ResizeObserver) new ResizeObserver(refresh).observe(cols);
   window.addEventListener('resize', refresh);
   refresh();
 })();
