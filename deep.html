@@ -816,7 +816,8 @@
 
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
-    .tr-conf-wrap { flex-shrink: 0; }
+    .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
+    .tlm-item button.tr-conf-badge { color: var(--content-info); }
     /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
        The name and count stay put, and the actions stay in place but go quiet and inert. */
     .tr-card.is-saving .tr-origin { display: none; }
@@ -3513,6 +3514,24 @@ function overlapBadgeHTML(pct, attrs, asButton) {
     ? '<button type="button" class="tr-conf-badge"' + (attrs || '') + '>' + inner + '</button>'
     : '<span class="tr-conf-badge"' + (attrs || '') + '>' + inner + '<span class="sr-only"> of members are in both groups</span></span>';
 }
+// The same treatment as the row badge: a tooltip that explains the number and a click that opens
+// the comparison. It sits inside a role="treeitem", which is a compromise, an option is not meant
+// to carry controls; the clean structure would be a treegrid, where cells legitimately can.
+function pickerOverlapBadge(node, prevGroup, pct) {
+  if (pct == null) return '';
+  if (!node) {   // bulk mode has no single group to compare against, so the number just reports
+    return '<span class="tlm-ov"><i data-icon="user-check"></i>' + pct + '%<span class="sr-only"> of members are in both groups</span></span>';
+  }
+  const o = overlapMembers(pickerOverlapSug(node, prevGroup));
+  const label = o.pct + '% (' + o.shared + ' out of ' + o.union + ' participants) are in both groups. View overlapping participants.';
+  return '<span class="tt-demo tlm-ov-wrap">' +
+    '<button type="button" class="tr-conf-badge" data-pickov="' + esc(prevGroup.name) + '" data-pickovsize="' + prevGroup.size +
+      '" aria-label="' + esc(label) + '"><i data-icon="user-check"></i>' + pct + '%</button>' +
+    '<div class="tooltip is-above">' + esc(label) + '</div></span>';
+}
+function pickerOverlapSug(node, prevGroup) {
+  return { newGroups: [{ name: node.name, size: node.size }], oldGroups: [{ name: prevGroup.name, size: prevGroup.size }] };
+}
 function confBadge(sug) {
   if (!sug) return '';
   const o = overlapMembers(sug);
@@ -3685,12 +3704,13 @@ function closeLinkPicker() {
   }
 }
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('#linkPickerOverlay').hidden) { closeLinkPicker(); e.stopPropagation(); }
+  // the comparison dialog stacks above the picker; Escape belongs to whatever is on top
+  if (e.key === 'Escape' && !$('#linkPickerOverlay').hidden && $('#membersOverlay').hidden) { closeLinkPicker(); e.stopPropagation(); }
 }, true);
 document.addEventListener('click', (e) => {
   if ($('#linkPickerOverlay').hidden) return;
   if (e.target.closest && (e.target.closest('#linkPickerOverlay') || e.target.closest('[data-treeadd]') ||
-      e.target.closest('#glDev'))) return;   // the panel tunes this dialog; it must not close it
+      e.target.closest('#membersOverlay') || e.target.closest('#glDev'))) return;
   closeLinkPicker();
 });
 
@@ -4414,11 +4434,8 @@ function renderTreeLinkMenu(q, menuSel) {
       ' style="' + indent + '">' +
       chev +
       '<span class="menu-item-body"><span class="tlm-name-row"><span class="menu-item-title">' + hlName(n.name, q) + '</span>' +
-      // These describe the option; they are not actions. Each row here is a role="treeitem" that
-      // picks the group when activated, and an option may hold content but not controls of its own,
-      // which is why the count needed a stopPropagation and the overlap hint a hover-only card.
       '<span class="tr-count"><i data-icon="users"></i>' + n.size + '<span class="sr-only"> participants</span></span>' +
-      (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, '') : (opts.overlapPct != null ? '<span class="tlm-ov"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> of members are in both groups</span></span>' : '')) + '</span>' +
+      pickerOverlapBadge(node, n, isSuggested && suggestedPct ? suggestedPct : opts.overlapPct) + '</span>' +
       '</span></div>';
   };
 
@@ -4470,6 +4487,12 @@ function renderTreeLinkMenu(q, menuSel) {
       sc.scrollTop += (sr.top - cr.top) - (sc.clientHeight - reserve - sugEl.offsetHeight) / 2;
     }, 80);
   }
+  menu.querySelectorAll('[data-pickov]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();                       // the option around it picks the group; this does not
+    const nn = state.treeLinkingNodeId ? findTreeNode(state.treeLinkingNodeId) : null;
+    if (!nn) return;
+    openOverlapMembers(pickerOverlapSug(nn, { name: b.dataset.pickov, size: Number(b.dataset.pickovsize) || 0 }));
+  }));
   menu.querySelectorAll('[data-pickertoggle]').forEach(b => b.addEventListener('click', (e) => {
     e.stopPropagation();
     const name = b.dataset.pickertoggle;
