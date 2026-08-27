@@ -817,8 +817,10 @@
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
     /* the reason, in the previous-survey column beside the first group */
-    .tr-nostruct-note { display: flex; align-items: flex-start; gap: var(--spacing-tight); min-height: 50px; padding: var(--spacing-base-tight) var(--spacing-base); background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-base); font-size: 14px; line-height: 1.4; color: var(--content-secondary); }
-    .tr-nostruct-note i { width: 16px; height: 16px; display: flex; flex-shrink: 0; margin-top: 2px; color: var(--content-info); }
+    /* the height of a link row, so the group beside it is not stretched out of line with the rest */
+    .tr-nostruct-note { display: flex; align-items: center; gap: var(--spacing-tight); height: 50px; padding: 0 var(--spacing-base); background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-base); font-size: 14px; color: var(--content-secondary); }
+    .tr-nostruct-note i { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-info); }
+    .tr-nostruct-note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
     .tlm-item button.tr-conf-badge { color: var(--content-info); }
     /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
@@ -3563,9 +3565,10 @@ function linkColumns(n, sug) {
   if (!prevHasStructure(state.treeStructure)) {
     if (structNoteUsed) return { mid: '', right: '' };
     structNoteUsed = true;
+    // one line, so the row it sits in stays the height of every other row. The column header
+    // above it already names the survey, so the note does not repeat it.
     return { mid: '', right: '<div class="tr-nostruct-note"><i data-icon="info"></i>' +
-      '<span>No ' + esc(state.treeStructure.toLowerCase()) + ' in ' + esc(surveyPlain(state.selectedSurvey || '')) +
-      ', so there is nothing to link these to.</span></div>' };
+      '<span>No ' + esc(state.treeStructure.toLowerCase()) + ' in this survey</span></div>' };
   }
   if (n.links.length === 0) {
     if (state.treeLinkingNodeId === n.id) {
