@@ -816,14 +816,10 @@
 
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
-    /* sits on the table's own grid so the message lands in the previous-survey column */
-    .tr-nostruct { display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; align-items: start; margin-bottom: var(--spacing-tight); }
-    .tr-nostruct[hidden] { display: none; }
-    .tr-nostruct-msg { grid-column: 3; padding: var(--spacing-base-tight) var(--spacing-base); background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-base); }
-    .tr-nostruct-hd { display: flex; align-items: center; gap: var(--spacing-tight); font-size: 14px; font-weight: 600; color: var(--content-base); }
-    .tr-nostruct-hd i { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-info); }
-    .tr-nostruct-text { font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin: var(--spacing-extra-tight) 0 0; }
-    @media (max-width: 900px) { .tr-nostruct { display: none; } }
+    /* the column header carries the reason, on its own line under the survey name */
+    .tr-cols span.is-note { display: flex; flex-direction: column; gap: 2px; }
+    .tr-cols-note { display: flex; align-items: center; gap: var(--spacing-extra-tight); font-size: 12px; font-weight: 500; color: var(--content-secondary); }
+    .tr-cols-note i { width: 14px; height: 14px; display: flex; flex-shrink: 0; color: var(--content-info); }
     .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
     .tlm-item button.tr-conf-badge { color: var(--content-info); }
     /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
@@ -1420,14 +1416,6 @@
             </div>
             <div class="tr-table" id="treeTable">
               <div class="tr-cols" id="treeCols"><span>Current survey</span><span id="trColPrev">Your Voice - Employee Listening ’25</span></div>
-              <!-- this survey has the structure, the previous one never did: the message sits in
-                   that survey's column, beside the groups it has nothing to match -->
-              <div class="tr-nostruct" id="glNoStruct" hidden>
-                <div class="tr-nostruct-msg">
-                  <div class="tr-nostruct-hd"><i data-icon="info"></i><span id="glNoStructTitle"></span></div>
-                  <p class="tr-nostruct-text">This structure was set up after that survey ran, so it has no groups to match these against. Results for it start with this survey.</p>
-                </div>
-              </div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
@@ -3922,12 +3910,6 @@ function renderTree() {
   // The structure and its groups stay: it is only the previous survey that has nothing to offer,
   // so the message sits in that column and the left side reads as usual.
   const missing = !prevHasStructure(state.treeStructure);
-  const noStruct = $('#glNoStruct');
-  if (noStruct) {
-    noStruct.hidden = !missing;
-    const t = $('#glNoStructTitle');
-    if (t) t.textContent = 'Not in ' + surveyPlain(state.selectedSurvey || '');
-  }
   const fgroup = document.querySelector('.tr-filter-group');
   if (fgroup) fgroup.hidden = missing;   // every group is unlinked here, so the counts say nothing
   renderTreeFilters();
@@ -4061,7 +4043,15 @@ function renderTree() {
   });
   const input = $('#treeLinkSearch');
   if (input) { renderTreeLinkMenu(''); positionInlineLinkMenu(); wirePickerKeys(input, '#treeLinkMenu'); input.addEventListener('input', () => { renderTreeLinkMenu(input.value); positionInlineLinkMenu(); }); setTimeout(() => input.focus({ preventScroll: true }), 0); }
-  const prevHead = $('#trColPrev'); if (prevHead) prevHead.innerHTML = surveyHTML(state.selectedSurvey);
+  // The note labels this column, so it lives in the column's own header: as a block above the rows
+  // it left the left column starting a hundred pixels below its own heading.
+  const prevHead = $('#trColPrev');
+  if (prevHead) {
+    prevHead.innerHTML = surveyHTML(state.selectedSurvey) +
+      (missing ? '<span class="tr-cols-note"><i data-icon="info"></i>No ' +
+        esc(state.treeStructure.toLowerCase()) + ' in this survey, so there is nothing to link to</span>' : '');
+    prevHead.classList.toggle('is-note', missing);
+  }
   syncSelectionUI(body);
   tagTreePositions();
   if (sheetNodeId && !document.getElementById('groupSheetOverlay').hidden) renderGroupSheet();
