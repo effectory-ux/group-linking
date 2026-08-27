@@ -1061,6 +1061,7 @@
     .gl-dev-x i { width: 14px; height: 14px; display: flex; }
     .gl-dev-body { padding: var(--spacing-base-tight); display: flex; flex-direction: column; gap: 2px; }
     .gl-dev-label { font-size: 12px; font-weight: 600; color: #94a2c4; padding: var(--spacing-extra-tight) var(--spacing-tight); }
+    .gl-dev-hint { font-size: 11px; line-height: 1.4; color: #8090b4; padding: 0 var(--spacing-tight) var(--spacing-tight); }
     .gl-dev-opt { display: flex; align-items: flex-start; gap: var(--spacing-tight); width: 100%; padding: var(--spacing-tight);
                   font-family: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-radius: var(--radius-md); color: inherit; cursor: pointer; }
     .gl-dev-opt:hover { background: #16223c; }
@@ -5237,7 +5238,9 @@ function renderDevPanel() {
         '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
       '</span>' +
     '</button>').join('') +
-    '<div class="gl-dev-label">In the previous survey</div>' + STRUCTURES.map(name =>
+    '<div class="gl-dev-label">Structures in the previous survey</div>' +
+    '<div class="gl-dev-hint">Switch one off and step 2 opens on it, with nothing to link its groups to.</div>' +
+    STRUCTURES.map(name =>
       '<button class="gl-dev-opt' + (prevHasStructure(name) ? ' is-on' : '') + '" data-prevstruct="' + esc(name) + '"' +
         ' aria-pressed="' + prevHasStructure(name) + '">' +
         '<span class="gl-dev-check" aria-hidden="true"></span>' +
@@ -5250,7 +5253,6 @@ function renderDevPanel() {
       '</button>').join('');
   icons();
 }
-// what the panel exposes: the flight, the handover, and the backdrop's wait and fade
 function setDevPanel(open) {
   buildDevPanel();
   const el = $('#glDev'); if (!el) return;
@@ -5267,7 +5269,15 @@ document.addEventListener('click', (e) => {
     if (state.prevMissingStructures.has(name)) state.prevMissingStructures.delete(name);
     else state.prevMissingStructures.add(name);
     closeOverlays();
-    if (state.view === 'linking') renderLinking();
+    // land on the structure that was just toggled, so the state is on screen straight away
+    // instead of hiding behind whichever structure happened to be open
+    state.treeStructure = name;
+    state.treeSelected.clear(); state.treeSelectAnchor = null; state.treeLinkingNodeId = null;
+    // switching to the linking view collapses both steps, so step 2 is opened after that has
+    // happened, not before it: the hash change that drives the switch runs as its own task
+    const show = () => { renderLinking(); if (!linkingBlocked()) openAcc('link', true); };
+    if (state.view !== 'linking' && !linkingBlocked()) { goToView('linking'); setTimeout(show, 0); }
+    else show();
     updateAccSummaries(); renderDevPanel(); icons();
     return;
   }
