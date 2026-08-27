@@ -6,7 +6,6 @@ structuur, zodat scores over de tijd vergeleken kunnen worden.
 | Pagina | Wat het laat zien |
 |---|---|
 | [effectory.html](https://effectory-ux.github.io/group-linking/effectory.html) | de structuur van Effectory zelf |
-| [stepped.html](https://effectory-ux.github.io/group-linking/stepped.html) | de stapsgewijze basisflow |
 | [deep.html](https://effectory-ux.github.io/group-linking/deep.html) | een diepe boom, als stresstest |
 
 Tokens, componenten, iconen en illustraties komen rechtstreeks van het
