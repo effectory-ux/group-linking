@@ -780,7 +780,6 @@
     .tlm-name-row { display: flex; align-items: center; gap: var(--spacing-tight); min-width: 0; }
     .tlm-ov { display: inline-flex; align-items: center; gap: var(--spacing-extra-tight); margin-left: auto; flex-shrink: 0; padding-left: var(--spacing-tight); font-size: 12px; font-weight: 600; color: var(--content-info); white-space: nowrap; cursor: help; }
     .tlm-ov i { width: 12px; height: 12px; display: flex; }
-    .tr-count.is-ovpop, .tr-count.is-ovclick { cursor: pointer; }
     /* name-based suggested match in the picker */
     .tlm-item.is-suggested { background: var(--bg-info-subtle); border-radius: var(--radius-md); }
     #linkPickerMenu .tlm-item.is-suggested { border-color: var(--border-info); background: var(--bg-info-subtle); }
@@ -1057,13 +1056,6 @@
     .gl-dev-opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .gl-dev-opt-name { font-weight: 500; }
     .gl-dev-opt-note { font-size: 12px; line-height: 1.45; color: #9fadcd; }
-    .gl-dev-knob { display: flex; flex-direction: column; gap: 2px; padding: var(--spacing-tight); }
-    .gl-dev-knob-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #9fadcd; }
-    .gl-dev-knob-top output { font-variant-numeric: tabular-nums; color: #e7ebf5; }
-    .gl-dev-knob input[type="range"] { width: 100%; margin: 0; accent-color: #57c4c0; }
-    .gl-dev-replay { margin: var(--spacing-tight); padding: 6px var(--spacing-base-tight); font-family: inherit; font-size: 12px;
-                     background: #1b2a4a; color: #e7ebf5; border: 1px solid #35425f; border-radius: var(--radius-sm); cursor: pointer; }
-    .gl-dev-replay:hover { background: #22345a; }
     .gl-dev-foot { padding: var(--spacing-tight) var(--spacing-base) var(--spacing-base-tight); font-size: 12px; color: #8a99bd; border-top: 1px solid #35425f; }
     .gl-dev-foot kbd { font-family: inherit; font-size: 12px; padding: 1px 5px; border: 1px solid #4a587a; border-radius: var(--radius-sm); background: #17223c; }
 </style>
@@ -4422,8 +4414,11 @@ function renderTreeLinkMenu(q, menuSel) {
       ' style="' + indent + '">' +
       chev +
       '<span class="menu-item-body"><span class="tlm-name-row"><span class="menu-item-title">' + hlName(n.name, q) + '</span>' +
-      '<span class="tr-count' + (node ? ' is-ovpop' : '') + '"' + (node ? ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"' : '') + '><i data-icon="users"></i>' + n.size + '<span class="sr-only"> participants</span></span>' +
-      (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, ' data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"') : (opts.overlapPct != null ? '<span class="tlm-ov" data-ovpop="' + esc(n.name) + '" data-ovsize="' + n.size + '"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> of members are in both groups</span></span>' : '')) + '</span>' +
+      // These describe the option; they are not actions. Each row here is a role="treeitem" that
+      // picks the group when activated, and an option may hold content but not controls of its own,
+      // which is why the count needed a stopPropagation and the overlap hint a hover-only card.
+      '<span class="tr-count"><i data-icon="users"></i>' + n.size + '<span class="sr-only"> participants</span></span>' +
+      (isSuggested && suggestedPct ? overlapBadgeHTML(suggestedPct, '') : (opts.overlapPct != null ? '<span class="tlm-ov"><i data-icon="user-check"></i>' + opts.overlapPct + '%<span class="sr-only"> of members are in both groups</span></span>' : '')) + '</span>' +
       '</span></div>';
   };
 
@@ -4482,7 +4477,6 @@ function renderTreeLinkMenu(q, menuSel) {
     if (set.has(name)) set.delete(name); else set.add(name);
     renderTreeLinkMenu(q, menuSel);
   }));
-  menu.querySelectorAll('.tr-count[data-ovpop]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); const nn = state.treeLinkingNodeId ? findTreeNode(state.treeLinkingNodeId) : null; if (!nn) return; openOverlapMembers({ newGroups: [{ name: nn.name, size: nn.size }], oldGroups: [{ name: el.dataset.ovpop, size: Number(el.dataset.ovsize) || 0 }] }); }));
   menu.querySelectorAll('[data-pick]').forEach(mi => mi.addEventListener('click', () => {
     const picked = mi.dataset.pick;
     if (state.bulkMode) {
@@ -4865,11 +4859,6 @@ var showMatchPop = null;
     if (anchor.dataset.matchpop != null) {
       const id = Number(anchor.dataset.matchpop);
       sug = suggestions.find(s => s.id === id); key = 'm' + id;
-    } else if (anchor.dataset.ovpop != null) {
-      const node = state.treeLinkingNodeId ? findTreeNode(state.treeLinkingNodeId) : null;
-      if (!node) return;
-      sug = { newGroups: [{ name: node.name, size: node.size }], oldGroups: [{ name: anchor.dataset.ovpop, size: Number(anchor.dataset.ovsize) || 0 }] };
-      key = 'o' + node.id + '|' + anchor.dataset.ovpop;
     }
     if (!sug) return;
     if (currentKey === key && !pop.hidden) return;
@@ -4893,7 +4882,7 @@ var showMatchPop = null;
     hide();
   });
   document.addEventListener('mouseover', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode])');
     if (a) show(a);
   });
   // the badge is a button, and its hover card cannot be reached by Tab (it hides when focus
@@ -4914,17 +4903,17 @@ var showMatchPop = null;
     hide(); openOverlapMembers(sug);
   });
   document.addEventListener('mouseout', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode])');
     if (!a) return;
     if (heldBy) return;                // a click is holding it open
     const to = e.relatedTarget;
-    if (to && to.closest && (to.closest('[data-matchpop]') || to.closest('[data-ovpop]') || to.closest('#matchPop'))) return;
+    if (to && to.closest && (to.closest('[data-matchpop]') || to.closest('#matchPop'))) return;
     scheduleHide();
   });
   pop.addEventListener('mouseenter', clear);
   pop.addEventListener('mouseleave', scheduleHide);
   document.addEventListener('focusin', (e) => {
-    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode]), [data-ovpop]:not(.tr-count)');
+    const a = e.target.closest && e.target.closest('[data-matchpop]:not(.tr-count):not([data-overlap-mode])');
     if (a) show(a); else if (!heldBy && (!e.target.closest || !e.target.closest('#matchPop'))) scheduleHide();
   });
   window.addEventListener('scroll', hide, true);
@@ -5023,15 +5012,6 @@ function buildDevPanel() {
 }
 function renderDevPanel() {
   const body = $('#glDevBody'); if (!body) return;
-  const optRow = (list, current, attr) => list.map(sc =>
-    '<button class="gl-dev-opt' + (sc.key === current ? ' is-on' : '') + '" data-' + attr + '="' + sc.key + '"' +
-      ' aria-pressed="' + (sc.key === current) + '">' +
-      '<span class="gl-dev-radio" aria-hidden="true"></span>' +
-      '<span class="gl-dev-opt-body">' +
-        '<span class="gl-dev-opt-name">' + esc(sc.label) + '</span>' +
-        '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
-      '</span>' +
-    '</button>').join('');
   body.innerHTML = '<div class="gl-dev-label">Scenario</div>' + SCENARIOS.map(sc =>
     '<button class="gl-dev-opt' + (sc.key === state.scenario ? ' is-on' : '') + '" data-scenario="' + sc.key + '"' +
       ' aria-pressed="' + (sc.key === state.scenario) + '">' +
@@ -5040,42 +5020,10 @@ function renderDevPanel() {
         '<span class="gl-dev-opt-name">' + esc(sc.label) + '</span>' +
         '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
       '</span>' +
-    '</button>').join('') +
-    '<div class="gl-dev-label">Suggestion overlap</div>' + optRow(OVERLAP_UIS, state.overlapUI, 'overlapui') +
-    '<div class="gl-dev-label">Morph timing</div>' + MORPH_KNOBS.map(k =>
-      '<label class="gl-dev-knob"><span class="gl-dev-knob-top">' + esc(k.label) +
-        '<output data-morphout="' + k.key + '">' + MORPH[k.key] + 'ms</output></span>' +
-        '<input type="range" data-morphvar="' + k.key + '" min="' + k.min + '" max="' + k.max +
-        '" step="20" value="' + MORPH[k.key] + '" /></label>').join('') +
-    '<button class="gl-dev-replay" data-morphreplay>Replay the morph</button>';
+    '</button>').join('');
   icons();
 }
 // what the panel exposes: the flight, the handover, and the backdrop's wait and fade
-const MORPH_KNOBS = [
-  { key: 'flight',  label: 'Flight',        min: 100, max: 900 },
-  { key: 'reveal',  label: 'Content fade',  min: 60,  max: 600 },
-  { key: 'bdDelay', label: 'Backdrop wait', min: 0,   max: 700 },
-  { key: 'bdDur',   label: 'Backdrop fade', min: 60,  max: 700 },
-];
-// dragging a slider must not rebuild the panel: it would drop the drag. Only the readout changes.
-document.addEventListener('input', (e) => {
-  const el = e.target.closest && e.target.closest('[data-morphvar]');
-  if (!el) return;
-  MORPH[el.dataset.morphvar] = Number(el.value);
-  applyMorphVars();
-  const out = document.querySelector('[data-morphout="' + el.dataset.morphvar + '"]');
-  if (out) out.textContent = el.value + 'ms';
-});
-document.addEventListener('click', (e) => {
-  if (!e.target.closest || !e.target.closest('[data-morphreplay]')) return;
-  // close whatever is open, then run it again from the same row
-  const openNode = state.treeLinkingNodeId;
-  closeLinkPicker();
-  const pick = openNode
-    ? document.querySelector('#treeBody .tr-card[data-nodeid="' + openNode + '"] [data-treeadd]')
-    : (document.querySelector('#treeBody .tr-lrow.is-empty') || document.querySelector('#treeBody [data-treeadd]'));
-  if (pick) setTimeout(() => pick.click(), 60);
-});
 function setDevPanel(open) {
   buildDevPanel();
   const el = $('#glDev'); if (!el) return;
@@ -5086,14 +5034,6 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest) return;
   const opt = e.target.closest('[data-scenario]');
   if (opt) { applyScenario(opt.dataset.scenario); return; }
-  const ov = e.target.closest('[data-overlapui]');
-  if (ov) {
-    state.overlapUI = ov.dataset.overlapui;
-    closeOverlays();
-    if (state.view === 'linking') renderLinking();
-    renderDevPanel(); icons();
-    return;
-  }
   if (e.target.closest('#glDevClose')) setDevPanel(false);
 });
 function inTextField(t) {
