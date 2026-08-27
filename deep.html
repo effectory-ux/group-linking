@@ -816,10 +816,9 @@
 
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
-    /* the column header carries the reason, on its own line under the survey name */
-    .tr-cols span.is-note { display: flex; flex-direction: column; gap: 2px; }
-    .tr-cols-note { display: flex; align-items: center; gap: var(--spacing-extra-tight); font-size: 12px; font-weight: 500; color: var(--content-secondary); }
-    .tr-cols-note i { width: 14px; height: 14px; display: flex; flex-shrink: 0; color: var(--content-info); }
+    /* the reason, in the previous-survey column beside the first group */
+    .tr-nostruct-note { display: flex; align-items: flex-start; gap: var(--spacing-tight); min-height: 50px; padding: var(--spacing-base-tight) var(--spacing-base); background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-base); font-size: 14px; line-height: 1.4; color: var(--content-secondary); }
+    .tr-nostruct-note i { width: 16px; height: 16px; display: flex; flex-shrink: 0; margin-top: 2px; color: var(--content-info); }
     .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
     .tlm-item button.tr-conf-badge { color: var(--content-info); }
     /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
@@ -3367,7 +3366,9 @@ function treeRowHTML(n, level, ancestors) {
     '<div class="tr-card-grid" role="presentation">' +
     '<div class="tr-leftcol" role="cell">' +
     '<div class="tr-leftcard' + leftState + '">' +
-    '<span class="tr-check' + (isSel ? ' is-checked' : '') + '" data-treecheck="' + esc(n.id) + '" role="checkbox" aria-checked="' + isSel + '" tabindex="0" aria-label="Select ' + esc(n.name) + '"><i data-icon="check"></i></span>' +
+    // the checkbox leads only to bulk linking, which is equally impossible here
+    (!prevHasStructure(state.treeStructure) ? '' :
+      '<span class="tr-check' + (isSel ? ' is-checked' : '') + '" data-treecheck="' + esc(n.id) + '" role="checkbox" aria-checked="' + isSel + '" tabindex="0" aria-label="Select ' + esc(n.name) + '"><i data-icon="check"></i></span>') +
     (hasChildren
       ? '<button class="tr-toggle' + (isOpen ? ' is-open' : '') + '" data-treetoggle="' + esc(n.id) + '" aria-expanded="' + isOpen + '" aria-label="' + (isOpen ? 'Collapse ' : 'Expand ') + esc(n.name) + '"><i data-icon="chevron-down"></i></button>'
       : '<span class="tr-toggle-spacer"></span>') +
@@ -3382,7 +3383,9 @@ function treeRowHTML(n, level, ancestors) {
     })() +
     (n.size ? '<div class="tt-demo tr-count-wrap"><button class="tr-count" data-members="' + esc(n.name) + '" data-size="' + n.size + '" data-survey="' + esc(CURRENT_SURVEY) + '" aria-label="View ' + n.size + ' participants in ' + esc(n.name) + '"><i data-icon="users"></i>' + n.size + '</button><div class="tooltip is-above">View participants</div></div>' : '') +
     '</div>' +
-    (state.treeLinkingNodeId === n.id
+    // no add button where nothing can be linked: it would offer an action with no destination
+    (!prevHasStructure(state.treeStructure) ? ''
+      : state.treeLinkingNodeId === n.id
       ? '<div class="tr-add-slot tt-demo" style="visibility:hidden"><button class="tr-add-btn" tabindex="-1"><i data-icon="plus"></i></button></div>'
       : '<div class="tr-add-slot tt-demo"><button class="tr-add-btn" data-treeadd="' + esc(n.id) + '" aria-label="' + (n.links.length ? 'Link another group' : 'Link a group') + '"><i data-icon="plus"></i></button><div class="tooltip is-below">' + (n.links.length ? 'Link another group' : 'Link a group') + '</div></div>') +
     '</div>' +
@@ -3418,9 +3421,18 @@ function linkSearchBoxHTML() {
 }
 
 // Build the middle connector column (status icons) and the right link-card column, row-aligned.
+// The note sits in the table rather than the column header: the header is one grid row shared by
+// both columns, so a second line there pushed the groups down on both sides.
+var structNoteUsed = false;
 function linkColumns(n, sug) {
   // nothing on the other side for this structure: no slot to fill and no line to draw
-  if (!prevHasStructure(state.treeStructure)) return { mid: '', right: '' };
+  if (!prevHasStructure(state.treeStructure)) {
+    if (structNoteUsed) return { mid: '', right: '' };
+    structNoteUsed = true;
+    return { mid: '', right: '<div class="tr-nostruct-note"><i data-icon="info"></i>' +
+      '<span>No ' + esc(state.treeStructure.toLowerCase()) + ' in ' + esc(surveyPlain(state.selectedSurvey || '')) +
+      ', so there is nothing to link these to.</span></div>' };
+  }
   if (n.links.length === 0) {
     if (state.treeLinkingNodeId === n.id) {
       const right = '<div class="tr-rrow">' + linkSearchBoxHTML() + '</div>';
@@ -3778,6 +3790,7 @@ function renderTree() {
   // The structure and its groups stay: it is only the previous survey that has nothing to offer,
   // so the message sits in that column and the left side reads as usual.
   const missing = !prevHasStructure(state.treeStructure);
+  structNoteUsed = false;      // the note goes in the first row's right cell, once per render
   const fgroup = document.querySelector('.tr-filter-group');
   if (fgroup) fgroup.hidden = missing;   // every group is unlinked here, so the counts say nothing
   renderTreeFilters();
@@ -3911,15 +3924,7 @@ function renderTree() {
   });
   const input = $('#treeLinkSearch');
   if (input) { renderTreeLinkMenu(''); positionInlineLinkMenu(); wirePickerKeys(input, '#treeLinkMenu'); input.addEventListener('input', () => { renderTreeLinkMenu(input.value); positionInlineLinkMenu(); }); setTimeout(() => input.focus({ preventScroll: true }), 0); }
-  // The note labels this column, so it lives in the column's own header: as a block above the rows
-  // it left the left column starting a hundred pixels below its own heading.
-  const prevHead = $('#trColPrev');
-  if (prevHead) {
-    prevHead.innerHTML = surveyHTML(state.selectedSurvey) +
-      (missing ? '<span class="tr-cols-note"><i data-icon="info"></i>No ' +
-        esc(state.treeStructure.toLowerCase()) + ' in this survey, so there is nothing to link to</span>' : '');
-    prevHead.classList.toggle('is-note', missing);
-  }
+  const prevHead = $('#trColPrev'); if (prevHead) prevHead.innerHTML = surveyHTML(state.selectedSurvey);
   syncSelectionUI(body);
   tagTreePositions();
   if (sheetNodeId && !document.getElementById('groupSheetOverlay').hidden) renderGroupSheet();
