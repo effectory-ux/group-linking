@@ -1061,14 +1061,11 @@
     .gl-dev-x i { width: 14px; height: 14px; display: flex; }
     .gl-dev-body { padding: var(--spacing-base-tight); display: flex; flex-direction: column; gap: 2px; }
     .gl-dev-label { font-size: 12px; font-weight: 600; color: #94a2c4; padding: var(--spacing-extra-tight) var(--spacing-tight); }
-    .gl-dev-hint { font-size: 11px; line-height: 1.4; color: #8090b4; padding: 0 var(--spacing-tight) var(--spacing-tight); }
     .gl-dev-opt { display: flex; align-items: flex-start; gap: var(--spacing-tight); width: 100%; padding: var(--spacing-tight);
                   font-family: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-radius: var(--radius-md); color: inherit; cursor: pointer; }
     .gl-dev-opt:hover { background: #16223c; }
     .gl-dev-opt.is-on { background: #1b2a4a; }
     .gl-dev-radio { flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: var(--radius-full); border: 1px solid #5b6a8c; }
-    .gl-dev-check { flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: var(--radius-sm); border: 1px solid #5b6a8c; }
-    .gl-dev-opt.is-on .gl-dev-check { border-color: #57c4c0; background: #57c4c0; box-shadow: inset 0 0 0 2px #101a2f; }
     .gl-dev-opt.is-on .gl-dev-radio { border-color: #57c4c0; box-shadow: inset 0 0 0 3px #57c4c0; }
     .gl-dev-opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .gl-dev-opt-name { font-weight: 500; }
@@ -2374,6 +2371,9 @@ const OVERLAP_UIS = [
   { key: 'popover', label: 'Popover on the badge',
     note: 'The badge discloses the rich card as a real popover: click opens it, focus moves in, Escape closes.' },
 ];
+// the structure the "no matching structure" scenario plays out on: the last one, so the two
+// above it still link normally and both sides are on screen at once
+const NO_STRUCT_DEMO = 'Job family';
 const SCENARIOS = [
   { key: 'default', label: 'Previous survey auto-selected',
     note: 'The happy path: the most recent completed survey in this project is picked for you.' },
@@ -2381,6 +2381,8 @@ const SCENARIOS = [
     note: 'Completed surveys exist, but none was a close enough match to pick automatically.' },
   { key: 'no-surveys', label: 'First survey in the account',
     note: 'Nothing has run before, so there is nothing to link with. Linking is unavailable.' },
+  { key: 'no-structure', label: 'No previous survey structure available',
+    note: 'This survey breaks down by ' + NO_STRUCT_DEMO.toLowerCase() + ', the previous one never did, so those groups have nothing to link to.' },
 ];
 function availableSurveys() { return state.prevAvailable ? SURVEYS : []; }
 // step 2 needs both a previous survey to exist and one to be chosen
@@ -2390,7 +2392,10 @@ function applyScenario(key) {
   const sc = SCENARIOS.find(x => x.key === key) || SCENARIOS[0];
   state.scenario = sc.key;
   state.prevAvailable = sc.key !== 'no-surveys';
-  state.selectedSurvey = sc.key === 'default' ? SURVEYS[0] : null;
+  state.selectedSurvey = (sc.key === 'default' || sc.key === 'no-structure') ? SURVEYS[0] : null;
+  // the missing structure is the whole point of that scenario, and of no other
+  state.prevMissingStructures = sc.key === 'no-structure' ? new Set([NO_STRUCT_DEMO]) : new Set();
+  if (sc.key === 'no-structure') state.treeStructure = NO_STRUCT_DEMO;
   pendingSurvey = state.selectedSurvey;
   applyPrevious(SURVEYS[0]);            // restore the pristine link set, whatever was clicked before
   state.treeSelected.clear(); state.treeSelectAnchor = null; state.treeLinkingNodeId = null;
@@ -2398,6 +2403,12 @@ function applyScenario(key) {
   if (linkingBlocked()) { openAcc('link', false); openAcc('select', false); }
   syncScenarioUI();
   if (!state.prevAvailable) goToView('overview');   // the disabled row is what there is to see
+  if (sc.key === 'no-structure') {
+    // land on it: switching to the linking view collapses both steps, so step 2 is opened after
+    // that has happened, not before it. The hash change that drives the switch is its own task.
+    const show = () => { renderLinking(); openAcc('link', true); };
+    if (state.view !== 'linking') { goToView('linking'); setTimeout(show, 0); } else show();
+  }
   // keep the scenario in the URL, so an edge case can be handed over as a link
   const q = sc.key === 'default' ? '' : '?scenario=' + sc.key;
   history.replaceState(null, '', location.pathname + q + location.hash);
@@ -5238,19 +5249,7 @@ function renderDevPanel() {
         '<span class="gl-dev-opt-note">' + esc(sc.note) + '</span>' +
       '</span>' +
     '</button>').join('') +
-    '<div class="gl-dev-label">Structures in the previous survey</div>' +
-    '<div class="gl-dev-hint">Switch one off and step 2 opens on it, with nothing to link its groups to.</div>' +
-    STRUCTURES.map(name =>
-      '<button class="gl-dev-opt' + (prevHasStructure(name) ? ' is-on' : '') + '" data-prevstruct="' + esc(name) + '"' +
-        ' aria-pressed="' + prevHasStructure(name) + '">' +
-        '<span class="gl-dev-check" aria-hidden="true"></span>' +
-        '<span class="gl-dev-opt-body">' +
-          '<span class="gl-dev-opt-name">' + esc(name) + '</span>' +
-          '<span class="gl-dev-opt-note">' + (prevHasStructure(name)
-            ? 'Present, so its groups can be linked.'
-            : 'Missing, so this structure cannot be linked.') + '</span>' +
-        '</span>' +
-      '</button>').join('');
+    '';
   icons();
 }
 function setDevPanel(open) {
@@ -5263,24 +5262,6 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest) return;
   const opt = e.target.closest('[data-scenario]');
   if (opt) { applyScenario(opt.dataset.scenario); return; }
-  const ps = e.target.closest('[data-prevstruct]');
-  if (ps) {
-    const name = ps.dataset.prevstruct;
-    if (state.prevMissingStructures.has(name)) state.prevMissingStructures.delete(name);
-    else state.prevMissingStructures.add(name);
-    closeOverlays();
-    // land on the structure that was just toggled, so the state is on screen straight away
-    // instead of hiding behind whichever structure happened to be open
-    state.treeStructure = name;
-    state.treeSelected.clear(); state.treeSelectAnchor = null; state.treeLinkingNodeId = null;
-    // switching to the linking view collapses both steps, so step 2 is opened after that has
-    // happened, not before it: the hash change that drives the switch runs as its own task
-    const show = () => { renderLinking(); if (!linkingBlocked()) openAcc('link', true); };
-    if (state.view !== 'linking' && !linkingBlocked()) { goToView('linking'); setTimeout(show, 0); }
-    else show();
-    updateAccSummaries(); renderDevPanel(); icons();
-    return;
-  }
   if (e.target.closest('#glDevClose')) setDevPanel(false);
 });
 function inTextField(t) {
