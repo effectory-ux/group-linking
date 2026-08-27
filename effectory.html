@@ -816,12 +816,14 @@
 
     /* confidence score + hover popover */
     .tr-conf { display: inline-flex; }
-    .gl-nostruct { display: flex; align-items: flex-start; gap: var(--spacing-base); padding: var(--spacing-loose); margin-top: var(--spacing-base); background: var(--bg-secondary); border: 1px solid var(--border-base); border-radius: var(--radius-lg); }
-    .gl-nostruct-icon { flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; background: var(--bg-info-subtle); color: var(--content-info); }
-    .gl-nostruct-icon i { width: 20px; height: 20px; display: flex; }
-    .gl-nostruct-title { font-size: 16px; font-weight: 600; color: var(--content-base); }
-    .gl-nostruct-text { font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin: var(--spacing-extra-tight) 0 0; max-width: 62ch; }
-    @media (max-width: 640px) { .gl-nostruct { flex-direction: column; } }
+    /* sits on the table's own grid so the message lands in the previous-survey column */
+    .tr-nostruct { display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; align-items: start; margin-bottom: var(--spacing-tight); }
+    .tr-nostruct[hidden] { display: none; }
+    .tr-nostruct-msg { grid-column: 3; padding: var(--spacing-base-tight) var(--spacing-base); background: var(--bg-secondary); border: 1px dashed var(--border-action); border-radius: var(--radius-base); }
+    .tr-nostruct-hd { display: flex; align-items: center; gap: var(--spacing-tight); font-size: 14px; font-weight: 600; color: var(--content-base); }
+    .tr-nostruct-hd i { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-info); }
+    .tr-nostruct-text { font-size: 14px; line-height: 1.5; color: var(--content-secondary); margin: var(--spacing-extra-tight) 0 0; }
+    @media (max-width: 900px) { .tr-nostruct { display: none; } }
     .tr-conf-wrap, .tlm-ov-wrap { flex-shrink: 0; }
     .tlm-item button.tr-conf-badge { color: var(--content-info); }
     /* saving: the origin icon gives way to a spinner, since that icon is the status still settling.
@@ -1390,14 +1392,7 @@
 
             <div class="tr-scope">
             <div class="tr-filter-desc" id="treeFilterDesc" hidden></div>
-            <!-- this survey has the structure, the previous one never did: nothing to link against -->
-            <div class="gl-nostruct" id="glNoStruct" hidden>
-              <div class="gl-nostruct-icon"><i data-icon="info"></i></div>
-              <div>
-                <div class="gl-nostruct-title" id="glNoStructTitle"></div>
-                <p class="gl-nostruct-text">This structure was set up after that survey ran, so there are no groups on the other side to link to. Results for it start with this survey. Pick another structure to carry on linking.</p>
-              </div>
-            </div>
+
             <div class="tr-controls">
               <div class="search-wrap">
                 <span class="search-icon"><i data-icon="search"></i></span>
@@ -1426,6 +1421,14 @@
             </div>
             <div class="tr-table" id="treeTable">
               <div class="tr-cols" id="treeCols"><span>Current survey</span><span id="trColPrev">Thriving Workplace Pulse April 2026</span></div>
+              <!-- this survey has the structure, the previous one never did: the message sits in
+                   that survey's column, beside the groups it has nothing to match -->
+              <div class="tr-nostruct" id="glNoStruct" hidden>
+                <div class="tr-nostruct-msg">
+                  <div class="tr-nostruct-hd"><i data-icon="info"></i><span id="glNoStructTitle"></span></div>
+                  <p class="tr-nostruct-text">This structure was set up after that survey ran, so it has no groups to match these against. Results for it start with this survey.</p>
+                </div>
+              </div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
@@ -3477,6 +3480,9 @@ function joinNames(list) {
 }
 function rowSummary(n) {
   const dot = t => /\.$/.test(t) ? t : t + '.';   // "Effectory B.V." already ends in one
+  // the structure is not in the previous survey, so whatever links the data holds are not shown
+  // and must not be announced either
+  if (!prevHasStructure(state.treeStructure)) return esc(n.name) + '.';
   if (n.noMatch) return esc(n.name) + ' is marked as having no matching group.';
   if (!n.links.length) return esc(n.name) + ' has no link yet.';
   const isSug = l => l.status === 'suggested' || l.status === 'review';
@@ -3494,8 +3500,10 @@ function treeRowHTML(n, level, ancestors) {
 
   const cols = linkColumns(n, sug);
   const isSel = state.treeSelected.has(n.id);
-  const hasLinked = n.links.some(l => l.status === 'linked');
-  const hasSuggested = !hasLinked && n.links.some(l => l.status === 'suggested' || l.status === 'review');
+  // same reason the right cell is empty: nothing is linked while the other side has no structure
+  const shownLinks = prevHasStructure(state.treeStructure) ? n.links : [];
+  const hasLinked = shownLinks.some(l => l.status === 'linked');
+  const hasSuggested = !hasLinked && shownLinks.some(l => l.status === 'suggested' || l.status === 'review');
   const leftState = hasLinked ? ' is-linked' : (hasSuggested ? ' is-suggested' : '');
   // the row names itself, so the pairing is announced before the cells are read and does not
   // depend on which breakpoint's cells are the visible ones
@@ -3557,6 +3565,8 @@ function linkSearchBoxHTML() {
 
 // Build the middle connector column (status icons) and the right link-card column, row-aligned.
 function linkColumns(n, sug) {
+  // nothing on the other side for this structure: no slot to fill and no line to draw
+  if (!prevHasStructure(state.treeStructure)) return { mid: '', right: '' };
   if (n.links.length === 0) {
     if (state.treeLinkingNodeId === n.id) {
       const right = '<div class="tr-rrow">' + linkSearchBoxHTML() + '</div>';
@@ -3911,22 +3921,17 @@ function setTreeTableRoles(on) {
   }
 }
 function renderTree() {
+  // The structure and its groups stay: it is only the previous survey that has nothing to offer,
+  // so the message sits in that column and the left side reads as usual.
   const missing = !prevHasStructure(state.treeStructure);
-  const noStruct = $('#glNoStruct'), table = $('#treeTable'), controls = document.querySelector('.tr-controls');
-  if (noStruct) noStruct.hidden = !missing;
-  if (table) table.hidden = missing;
-  if (controls) controls.hidden = missing;
-  const fgroup = document.querySelector('.tr-filter-group');
-  if (fgroup) fgroup.hidden = missing;          // its label would otherwise stand alone
-  if (missing) {
-    setTreeTableRoles(false);
-    const f = $('#treeFilters'); if (f) f.innerHTML = '';
-    const fd = $('#treeFilterDesc'); if (fd) fd.hidden = true;
+  const noStruct = $('#glNoStruct');
+  if (noStruct) {
+    noStruct.hidden = !missing;
     const t = $('#glNoStructTitle');
-    if (t) t.textContent = state.treeStructure + ' is not in ' + surveyPlain(state.selectedSurvey || '');
-    icons();
-    return;
+    if (t) t.textContent = 'Not in ' + surveyPlain(state.selectedSurvey || '');
   }
+  const fgroup = document.querySelector('.tr-filter-group');
+  if (fgroup) fgroup.hidden = missing;   // every group is unlinked here, so the counts say nothing
   renderTreeFilters();
   renderTreeFilterDesc();
   const body = $('#treeBody');
