@@ -5,9 +5,7 @@ structuur, zodat scores over de tijd vergeleken kunnen worden.
 
 | Pagina | Wat het laat zien |
 |---|---|
-| [roc.html](https://effectory-ux.github.io/group-linking/roc.html) | ROC van Amsterdam, de echte klantstructuur |
 | [effectory.html](https://effectory-ux.github.io/group-linking/effectory.html) | de structuur van Effectory zelf |
-| [bol.html](https://effectory-ux.github.io/group-linking/bol.html) | de structuur van bol.com |
 | [stepped.html](https://effectory-ux.github.io/group-linking/stepped.html) | de stapsgewijze basisflow |
 | [deep.html](https://effectory-ux.github.io/group-linking/deep.html) | een diepe boom, als stresstest |
 
