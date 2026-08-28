@@ -513,6 +513,10 @@
     /* once open (after the expand animation), stop clipping so sticky headers can pin */
     .acc.is-open.is-settled .sacc-body-inner { overflow: visible; }
     .sacc-body-pad { padding: var(--spacing-loose); }
+    /* step 2 opens straight onto the toolbar band, which runs to the fold above it */
+    #acc-link .sacc-body-pad { padding-top: 0; }
+    /* the review banner, when there is one, keeps its own air below the fold */
+    #acc-link .gl-cta { margin-top: var(--spacing-loose); }
     #acc-select .sacc-body-pad { background: var(--bg-secondary); }
     .acc-lead { font-size: 14px; color: var(--content-secondary); margin: 0 0 var(--spacing-base); }
 
@@ -1386,8 +1390,6 @@
 
 
             <div class="tr-scope">
-            <div class="tr-filter-desc" id="treeFilterDesc" hidden></div>
-
             <div class="tr-controls">
               <div class="search-wrap">
                 <span class="search-icon"><i data-icon="search"></i></span>
@@ -1398,6 +1400,7 @@
                 <div class="tr-filters" id="treeFilters"></div>
               </div>
             </div>
+            <div class="tr-filter-desc" id="treeFilterDesc" hidden></div>
             <div class="bulk-bar" id="bulkBar" hidden>
               <div class="bulk-left">
                 <button class="bulk-clear" id="bulkClear" aria-label="Clear selection"><i data-icon="cross"></i></button>
