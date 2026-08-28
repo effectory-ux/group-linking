@@ -845,12 +845,8 @@
     /* No transition on the position: the ring is repositioned on every scroll event, and a
        transition makes it chase the target instead of sitting on it. */
     .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; box-shadow: 0 0 0 9999px var(--bg-interface-overlay); }
-    .gl-tour-pop { position: fixed; z-index: 82; width: 320px; max-width: calc(100vw - 2 * var(--spacing-base)); background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-lg); box-shadow: var(--sh-dialogs); padding: var(--spacing-base); }
-    .gl-tour-step { font-size: 12px; font-weight: 600; color: var(--content-secondary); margin-bottom: var(--spacing-extra-tight); }
-    .gl-tour-title { font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--content-base); margin: 0 0 var(--spacing-tight); }
-    .gl-tour-text { font-size: 14px; line-height: 1.6; color: var(--content-secondary); margin: 0; }
-    .gl-tour-actions { display: flex; align-items: center; gap: var(--spacing-tight); margin-top: var(--spacing-base); }
-    .gl-tour-actions .gl-tour-spacer { flex: 1; }
+    /* the card itself is the design system's .spotlight — this only places it */
+    .gl-tour-pop { position: fixed; z-index: 82; }
     @media (prefers-reduced-motion: reduce) { .gl-ann, .gl-tour-ring { animation: none; transition: none; } }
 
     /* Missing structure: one panel as tall as the group list beside it. Laid over the right column
@@ -5263,25 +5259,31 @@ function placeTour() {
   ring.style.left = (r.left - pad) + 'px';
   ring.style.width = (r.width + pad * 2) + 'px';
   ring.style.height = (r.height + pad * 2) + 'px';
-  const gap = 12, ph = pop.offsetHeight, pw = pop.offsetWidth;
+  const card = pop.querySelector('.spotlight');
+  const gap = 14, ph = pop.offsetHeight, pw = pop.offsetWidth;
   const below = r.bottom + gap + ph <= window.innerHeight - 8;
   pop.style.top = (below ? r.bottom + gap : Math.max(8, r.top - gap - ph)) + 'px';
-  pop.style.left = Math.min(Math.max(8, r.left), window.innerWidth - pw - 8) + 'px';
+  // the arrow sits 28px in from the card's left edge, so the card starts left of the target
+  pop.style.left = Math.min(Math.max(8, r.left + r.width / 2 - 28), window.innerWidth - pw - 8) + 'px';
+  if (card) { card.classList.toggle('is-below', below); card.classList.toggle('is-above', !below); }
 }
 function showTourStep(i) {
   tourAt = i;
   const step = TOUR_STEPS[i]; if (!step) { endTour(); return; }
   const { veil, ring, pop } = tourEls();
   const last = i === TOUR_STEPS.length - 1;
+  // the dots carry the progress, so the step count is for screen readers only
+  const dots = TOUR_STEPS.map((s, n) =>
+    '<span class="sl-dot' + (n === i ? ' is-active' : '') + '"></span>').join('');
   pop.innerHTML =
-    '<div class="gl-tour-step">Step ' + (i + 1) + ' of ' + TOUR_STEPS.length + '</div>' +
-    '<p class="gl-tour-title" id="glTourTitle">' + esc(step.title) + '</p>' +
-    '<p class="gl-tour-text">' + esc(step.text) + '</p>' +
-    '<div class="gl-tour-actions">' +
-      '<button class="btn btn-tertiary" data-tour="end">Skip</button>' +
-      '<span class="gl-tour-spacer"></span>' +
-      (i > 0 ? '<button class="btn btn-secondary" data-tour="back">Back</button>' : '') +
-      '<button class="btn btn-primary" data-tour="' + (last ? 'end' : 'next') + '">' + (last ? 'Got it' : 'Next') + '</button>' +
+    '<div class="spotlight" id="glTourCard">' +
+      '<p class="sl-title" id="glTourTitle">' + esc(step.title) + '</p>' +
+      '<p class="sl-body">' + esc(step.text) + '</p>' +
+      '<div class="sl-footer is-multi">' +
+        '<div class="sl-dots" role="img" aria-label="Step ' + (i + 1) + ' of ' + TOUR_STEPS.length + '">' + dots + '</div>' +
+        '<button class="btn btn-primary" data-tour="' + (last ? 'end' : 'next') + '">' +
+          (last ? 'Got it!' : 'Next') + '</button>' +
+      '</div>' +
     '</div>';
   veil.hidden = ring.hidden = pop.hidden = false;
   const el = step.target();
