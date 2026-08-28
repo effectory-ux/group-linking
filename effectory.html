@@ -840,7 +840,11 @@
     /* the blue of the announcement's colour set: the card takes the subtle tint, the button the
        matching accent. Both themes come along, since these are the tokens the set is built on. */
     .gl-ann .announcement { background: var(--bg-info-subtle); }
-    .gl-ann .btn-primary { --bg-brand: var(--bg-info); --border-brand: var(--border-info-hover); }
+    /* Kept local until the design system's is-blue variant reaches its published stylesheet; this
+       is the same declaration, so swapping to `class="announcement is-blue"` will change nothing. */
+    .gl-ann .btn-primary { --bg-brand: var(--bg-info); --border-brand: var(--border-info-hover);
+      --bg-brand-hover: var(--bg-info-hover); --bg-brand-pressed: var(--bg-info-hover);
+      --border-brand-pressed: var(--border-info-hover); }
     @keyframes glAnnIn {
       from { opacity: 0; transform: translateY(28px) scale(.94); }
       60%  { opacity: 1; }
