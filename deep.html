@@ -835,13 +835,17 @@
     /* ── Onboarding: the announcement card, and the tour it starts ──────────────────────────
        The card is the design system's .announcement, floated over the page so the work underneath
        stays usable. The tour is a ring around one control at a time plus a card explaining it. */
-    .gl-ann { position: fixed; right: var(--spacing-loose); bottom: var(--spacing-loose); z-index: 70; animation: glAnnIn var(--motion-slow) var(--ease-out) both; }
+    /* Timing and curve are the design system's own, taken from the announcement deck's promote. */
+    .gl-ann { position: fixed; right: var(--spacing-loose); bottom: var(--spacing-loose); z-index: 70; animation: glAnnIn .42s cubic-bezier(.3, .1, .3, 1) both; }
     /* the blue of the announcement's colour set: the card takes the subtle tint, the button the
        matching accent. Both themes come along, since these are the tokens the set is built on. */
     .gl-ann .announcement { background: var(--bg-info-subtle); }
     .gl-ann .btn-primary { --bg-brand: var(--bg-info); --border-brand: var(--border-info-hover); }
-    @keyframes glAnnIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-    /* the veil catches clicks so the page underneath cannot be used mid-tour */
+    @keyframes glAnnIn {
+      from { opacity: 0; transform: translateY(28px) scale(.94); }
+      60%  { opacity: 1; }
+      to   { opacity: 1; transform: none; }
+    }
     /* The tour marks its target the way the design system marks focus, and otherwise leaves the page
        alone: no dimming and no click catcher, so you can look around while a step is up.
        No transition on the position: the ring is repositioned on every scroll event, and a
@@ -2420,7 +2424,8 @@ function openAcc(which, open) {
   if (which === 'link' && open) {
     renderLinking();
     // step 2 is where the page stops explaining itself, so the offer of a tour arrives with it
-    if (!state.tourDone) setTimeout(() => { if (el.classList.contains('is-open') && !state.tourDone) setAnnouncement(true); }, 340);
+    // a beat after the step has opened and settled, so it arrives once you are looking at the page
+    if (!state.tourDone) setTimeout(() => { if (el.classList.contains('is-open') && !state.tourDone) setAnnouncement(true); }, 2000);
     // after the expand animation, un-clip so the sticky structure bar + column headers can pin
     setTimeout(() => { if (el.classList.contains('is-open')) { el.classList.add('is-settled'); updateStickyOffsets(); syncStuckChrome(); } }, 340);
   }
@@ -5210,7 +5215,7 @@ const TOUR_STEPS = [
                   document.querySelector('#treeBody .tr-card-right') ||
                   document.querySelector('#treeBody .tr-card'),
     title: 'Link each group to its match',
-    text: 'Pick the group it continues, and their results line up as one trend' },
+    text: 'Pick the same group in the previous survey. If your structure changed since then, pick the one that comes closest.' },
 ];
 
 function buildAnnouncement() {
