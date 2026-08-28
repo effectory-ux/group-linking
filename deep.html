@@ -5216,17 +5216,16 @@ function buildAnnouncement() {
   el.id = 'glAnn';
   el.hidden = true;
   el.setAttribute('role', 'complementary');
-  el.setAttribute('aria-label', 'How group linking works');
+  el.setAttribute('aria-label', 'Help with this page');
   el.innerHTML =
     '<div class="announcement">' +
       '<button class="ann-close ib ib-24 ib-secondary" id="glAnnClose" aria-label="Dismiss"><i data-icon="cross"></i></button>' +
       '<div class="ann-media"><img src="https://effectory-ux.github.io/Engage-Design-system-/assets/illustrations/group-linking-explainer.png" alt="" /></div>' +
       '<div class="ann-body">' +
-        '<p class="ann-title">New here? Take the tour</p>' +
-        '<p class="ann-text">Three steps: pick a structure on each side, then match the groups so their scores carry over as trends.</p>' +
+        '<p class="ann-title">Need a hand?</p>' +
+        '<p class="ann-text">There is a short walkthrough of this page if you want one.</p>' +
         '<div class="ann-actions">' +
           '<button class="btn btn-primary" id="glAnnStart">View tutorial</button>' +
-          '<button class="btn btn-tertiary" id="glAnnLater">Not now</button>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -5316,7 +5315,7 @@ function endTour() {
 document.addEventListener('click', (e) => {
   if (!e.target.closest) return;
   if (e.target.closest('#glAnnStart')) { startTour(); return; }
-  if (e.target.closest('#glAnnClose') || e.target.closest('#glAnnLater')) {
+  if (e.target.closest('#glAnnClose')) {
     setAnnouncement(false); state.tourDone = true; return;
   }
   const t = e.target.closest('[data-tour]');
