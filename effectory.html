@@ -396,9 +396,9 @@
 
 
     /* ── Structure (in-page) ── */
-    /* Search and filters keep the bar the structure selector used to share, minus the tint: that
-       came from the structure, which now names itself in the column heads. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-bottom: var(--spacing-base); padding: var(--spacing-base-tight); background: var(--bg-tertiary); border-radius: var(--radius-lg); }
+    /* Search and filters share one row, on the card itself: the bar they used to sit in was there
+       for the structure selector, which now names itself in each column head. */
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-bottom: var(--spacing-base); padding: 0; }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
