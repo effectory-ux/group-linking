@@ -3847,8 +3847,8 @@ document.addEventListener('click', (e) => {
 $('#linkPickerSearch').addEventListener('input', (e) => renderTreeLinkMenu(e.target.value, '#linkPickerMenu'));
 wirePickerKeys($('#linkPickerSearch'), '#linkPickerMenu');
 
+// No entry for "all": the unfiltered list needs no explaining, and the lookup missing hides the line.
 const FILTER_DESC = {
-  all: { icon: 'list-unordered', html: 'Every group in this survey. Link each one to its match in your previous survey so you can compare results over time.' },
   linked: { icon: 'link', html: 'Groups already connected to a previous-survey group, so their scores now show up as a trend.' },
   suggested: { icon: 'lightbulb', html: 'We found a likely match for these groups based on member overlap. Review each one and confirm it, or pick a different group.' },
   nolink: { icon: 'info', html: 'These groups aren’t linked yet. Pick the matching group from your previous survey, or mark a group as no match to clear it from the list.' },
