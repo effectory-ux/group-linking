@@ -832,6 +832,27 @@
     .tr-conf { display: inline-flex; }
     /* the reason, in the previous-survey column beside the first group */
     /* the height of a link row, so the group beside it is not stretched out of line with the rest */
+    /* ── Onboarding: the announcement card, and the tour it starts ──────────────────────────
+       The card is the design system's .announcement, floated over the page so the work underneath
+       stays usable. The tour is a ring around one control at a time plus a card explaining it. */
+    .gl-ann { position: fixed; right: var(--spacing-loose); bottom: var(--spacing-loose); z-index: 70; animation: glAnnIn var(--motion-slow) var(--ease-out) both; }
+    @keyframes glAnnIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .gl-ann .ann-media { height: 132px; background: var(--bg-brand-subtle); }
+    .gl-ann .ann-media img { object-fit: contain; padding: var(--spacing-base-tight); }
+    /* the veil catches clicks so the page underneath cannot be used mid-tour */
+    .gl-tour-veil { position: fixed; inset: 0; z-index: 80; }
+    /* one ring, dimming everything outside it with its own shadow — no mask, no cut-out maths */
+    /* No transition on the position: the ring is repositioned on every scroll event, and a
+       transition makes it chase the target instead of sitting on it. */
+    .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; box-shadow: 0 0 0 9999px var(--bg-interface-overlay); }
+    .gl-tour-pop { position: fixed; z-index: 82; width: 320px; max-width: calc(100vw - 2 * var(--spacing-base)); background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-lg); box-shadow: var(--sh-dialogs); padding: var(--spacing-base); }
+    .gl-tour-step { font-size: 12px; font-weight: 600; color: var(--content-secondary); margin-bottom: var(--spacing-extra-tight); }
+    .gl-tour-title { font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--content-base); margin: 0 0 var(--spacing-tight); }
+    .gl-tour-text { font-size: 14px; line-height: 1.6; color: var(--content-secondary); margin: 0; }
+    .gl-tour-actions { display: flex; align-items: center; gap: var(--spacing-tight); margin-top: var(--spacing-base); }
+    .gl-tour-actions .gl-tour-spacer { flex: 1; }
+    @media (prefers-reduced-motion: reduce) { .gl-ann, .gl-tour-ring { animation: none; transition: none; } }
+
     /* Missing structure: one panel as tall as the group list beside it. Laid over the right column
        on the same grid as the rows, so it lines up exactly and stretches to the body's full height. */
     #treeBody.tr-nostruct { position: relative; }
@@ -2093,6 +2114,7 @@ const state = {
   overlapUI: 'dialog',       // how a suggestion's overlap detail opens: 'dialog' or 'popover'
   prevMissingStructures: new Set(),   // structures this survey has that the previous one never had
   prevStructureMap: {},               // this survey's structure -> the previous survey's structure it links into
+  tourDone: false,                    // the tutorial was taken or waved away, so stop offering it
   selected: new Set(),
   structFilter: new Set(),
   selectedSurvey: SURVEYS[0],
@@ -2399,6 +2421,8 @@ function openAcc(which, open) {
   updateAccSummaries();
   if (which === 'link' && open) {
     renderLinking();
+    // step 2 is where the page stops explaining itself, so the offer of a tour arrives with it
+    if (!state.tourDone) setTimeout(() => { if (el.classList.contains('is-open') && !state.tourDone) setAnnouncement(true); }, 340);
     // after the expand animation, un-clip so the sticky structure bar + column headers can pin
     setTimeout(() => { if (el.classList.contains('is-open')) { el.classList.add('is-settled'); updateStickyOffsets(); syncStuckChrome(); } }, 340);
   }
@@ -5169,6 +5193,143 @@ function setExplainer(show) {
 document.addEventListener('click', (e) => {
   if (e.target.closest && e.target.closest('#glExplainerHide')) { setExplainer(false); return; }
   if (e.target.closest && e.target.closest('#onbReopen')) { setExplainer(true); return; }
+});
+
+/* ═══════════════ TUTORIAL: ANNOUNCEMENT CARD + STEP TOUR ═══════════════ */
+// Step 2 is where the page stops explaining itself: two structure selectors and a table of
+// groups, with no hint of what to do first. The announcement offers a tour rather than
+// interrupting with one, and the tour walks the three decisions in the order you make them.
+const TOUR_STEPS = [
+  { target: () => document.querySelector('[data-structbtn="cur"]'),
+    title: 'Pick the structure in this survey',
+    text: 'Start with the breakdown you want to compare: your organizational structure, location, or job family.' },
+  { target: () => document.querySelector('[data-structbtn="prev"]'),
+    title: 'And the one it continues',
+    text: 'Usually the structure with the same name. Change it if the previous survey called that structure something else, or never had it at all.' },
+  { target: () => document.querySelector('#treeBody .tr-lrow.is-empty') ||
+                  document.querySelector('#treeBody .tr-card-right') ||
+                  document.querySelector('#treeBody .tr-card'),
+    title: 'Match each group to its counterpart',
+    text: 'Pick the group this one continues. Its scores then appear as a trend, instead of starting over.' },
+];
+
+function buildAnnouncement() {
+  if ($('#glAnn')) return;
+  const el = document.createElement('div');
+  el.className = 'gl-ann';
+  el.id = 'glAnn';
+  el.hidden = true;
+  el.setAttribute('role', 'complementary');
+  el.setAttribute('aria-label', 'How group linking works');
+  el.innerHTML =
+    '<div class="announcement">' +
+      '<button class="ann-close ib ib-24 ib-secondary" id="glAnnClose" aria-label="Dismiss"><i data-icon="cross"></i></button>' +
+      '<div class="ann-media"><img src="https://effectory-ux.github.io/Engage-Design-system-/assets/illustrations/group-linking-explainer.png" alt="" /></div>' +
+      '<div class="ann-body">' +
+        '<p class="ann-title">New here? Take the tour</p>' +
+        '<p class="ann-text">Three steps: pick a structure on each side, then match the groups so their scores carry over as trends.</p>' +
+        '<div class="ann-actions">' +
+          '<button class="btn btn-primary" id="glAnnStart">View tutorial</button>' +
+          '<button class="btn btn-tertiary" id="glAnnLater">Not now</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(el);
+  icons();
+}
+function setAnnouncement(show) {
+  buildAnnouncement();
+  const el = $('#glAnn'); if (!el) return;
+  el.hidden = !show;
+}
+
+var tourAt = -1;
+function tourEls() { return { veil: $('#glTourVeil'), ring: $('#glTourRing'), pop: $('#glTourPop') }; }
+function buildTour() {
+  if ($('#glTourVeil')) return;
+  const veil = document.createElement('div'); veil.className = 'gl-tour-veil'; veil.id = 'glTourVeil'; veil.hidden = true;
+  const ring = document.createElement('div'); ring.className = 'gl-tour-ring'; ring.id = 'glTourRing'; ring.hidden = true;
+  const pop = document.createElement('div'); pop.className = 'gl-tour-pop'; pop.id = 'glTourPop'; pop.hidden = true;
+  pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true'); pop.setAttribute('aria-labelledby', 'glTourTitle');
+  document.body.append(veil, ring, pop);
+}
+// Put the ring on the target and the card beside it: below when there is room, above otherwise.
+function placeTour() {
+  const step = TOUR_STEPS[tourAt]; if (!step) return;
+  const el = step.target(); const { ring, pop } = tourEls();
+  if (!el || !ring || !pop) return;
+  const r = el.getBoundingClientRect(), pad = 6;
+  ring.style.top = (r.top - pad) + 'px';
+  ring.style.left = (r.left - pad) + 'px';
+  ring.style.width = (r.width + pad * 2) + 'px';
+  ring.style.height = (r.height + pad * 2) + 'px';
+  const gap = 12, ph = pop.offsetHeight, pw = pop.offsetWidth;
+  const below = r.bottom + gap + ph <= window.innerHeight - 8;
+  pop.style.top = (below ? r.bottom + gap : Math.max(8, r.top - gap - ph)) + 'px';
+  pop.style.left = Math.min(Math.max(8, r.left), window.innerWidth - pw - 8) + 'px';
+}
+function showTourStep(i) {
+  tourAt = i;
+  const step = TOUR_STEPS[i]; if (!step) { endTour(); return; }
+  const { veil, ring, pop } = tourEls();
+  const last = i === TOUR_STEPS.length - 1;
+  pop.innerHTML =
+    '<div class="gl-tour-step">Step ' + (i + 1) + ' of ' + TOUR_STEPS.length + '</div>' +
+    '<p class="gl-tour-title" id="glTourTitle">' + esc(step.title) + '</p>' +
+    '<p class="gl-tour-text">' + esc(step.text) + '</p>' +
+    '<div class="gl-tour-actions">' +
+      '<button class="btn btn-tertiary" data-tour="end">Skip</button>' +
+      '<span class="gl-tour-spacer"></span>' +
+      (i > 0 ? '<button class="btn btn-secondary" data-tour="back">Back</button>' : '') +
+      '<button class="btn btn-primary" data-tour="' + (last ? 'end' : 'next') + '">' + (last ? 'Got it' : 'Next') + '</button>' +
+    '</div>';
+  veil.hidden = ring.hidden = pop.hidden = false;
+  const el = step.target();
+  if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // measure after the scroll settles, and again next frame in case the card's height changed
+  requestAnimationFrame(placeTour);
+  setTimeout(placeTour, 260);
+  const first = pop.querySelector('.btn-primary'); if (first) first.focus();
+}
+function startTour() {
+  buildTour();
+  // before opening the step: openAcc schedules the offer, and the offer has just been taken
+  state.tourDone = true;
+  setAnnouncement(false);
+  openAcc('link', true);
+  window.addEventListener('resize', placeTour);
+  window.addEventListener('scroll', placeTour, true);
+  showTourStep(0);
+}
+function endTour() {
+  const { veil, ring, pop } = tourEls();
+  if (veil) veil.hidden = true;
+  if (ring) ring.hidden = true;
+  if (pop) pop.hidden = true;
+  window.removeEventListener('resize', placeTour);
+  window.removeEventListener('scroll', placeTour, true);
+  tourAt = -1;
+  state.tourDone = true;
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest) return;
+  if (e.target.closest('#glAnnStart')) { startTour(); return; }
+  if (e.target.closest('#glAnnClose') || e.target.closest('#glAnnLater')) {
+    setAnnouncement(false); state.tourDone = true; return;
+  }
+  const t = e.target.closest('[data-tour]');
+  if (t) {
+    const a = t.dataset.tour;
+    if (a === 'end') endTour();
+    else if (a === 'next') showTourStep(tourAt + 1);
+    else if (a === 'back') showTourStep(tourAt - 1);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (tourAt < 0) return;
+  if (e.key === 'Escape') { e.stopPropagation(); endTour(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); showTourStep(tourAt + 1); }
+  else if (e.key === 'ArrowLeft' && tourAt > 0) { e.preventDefault(); showTourStep(tourAt - 1); }
 });
 
 /* ═══════════════ DEVELOPER PANEL ═══════════════ */
