@@ -406,15 +406,15 @@
     .struct-progress { display: flex; align-items: center; gap: var(--spacing-tight); }
     .struct-prog-item { display: flex; align-items: center; font-size: 12px; font-weight: 500; color: var(--content-secondary); white-space: nowrap; }
     .struct-prog-sep { color: var(--content-subtle); font-size: 16px; line-height: 1; }
-    .struct-select-wrap { position: relative; display: inline-block; }
-    .struct-select { font-family: inherit; display: flex; align-items: center; gap: var(--spacing-tight); width: 280px; font-size: 14px; font-weight: 600; color: var(--content-base); background: var(--bg-secondary); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-tight) var(--spacing-base-tight); cursor: pointer; transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out); }
+    .struct-select-wrap { position: relative; display: block; }
+    .struct-select { font-family: inherit; display: flex; align-items: center; gap: var(--spacing-tight); width: 100%; font-size: 14px; font-weight: 600; color: var(--content-base); background: var(--bg-secondary); border: 1px solid var(--border-base); border-radius: var(--radius-md); padding: var(--spacing-tight) var(--spacing-base-tight); cursor: pointer; transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out); }
     .struct-select-icon { width: 18px; height: 18px; display: flex; flex-shrink: 0; color: var(--content-base); }
     .struct-select-val { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
     .struct-select-chev { width: 16px; height: 16px; display: flex; flex-shrink: 0; color: var(--content-secondary); }
     .struct-select.is-blue { background: var(--bg-info-subtle); border-color: var(--border-info); }
     .struct-select.is-green { background: var(--bg-positive-subtle); border-color: var(--border-positive); }
     .struct-select.is-orange { background: var(--bg-warning-subtle); border-color: var(--border-warning); }
-    .struct-menu { position: absolute; top: 100%; left: 0; margin-top: var(--spacing-extra-tight); width: 280px; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); box-shadow: var(--sh-card); padding: var(--spacing-extra-tight); z-index: 60; }
+    .struct-menu { position: absolute; top: 100%; left: 0; margin-top: var(--spacing-extra-tight); width: 100%; min-width: 280px; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); box-shadow: var(--sh-card); padding: var(--spacing-extra-tight); z-index: 60; }
     /* button resets alongside the layout: the options are real buttons now, so the
        structure switcher can be reached and operated by keyboard */
     .struct-mi { display: flex; align-items: center; gap: var(--spacing-tight); width: 100%; padding: var(--spacing-tight) var(--spacing-base-tight); border: none; background: none; font-family: inherit; text-align: left; border-radius: var(--radius-base); cursor: pointer; }
@@ -614,7 +614,10 @@
     .tr-cols > span:last-child { grid-column: 3; }
     /* Whose column it is, and which of that survey's structures it shows. One selector per column,
        under the survey it belongs to, so neither has to say which survey it applies to. */
-    .tr-colhead { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-tight); min-width: 0; }
+    .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
+    /* The left column carries the add tab after every card (.tr-add-btn is 42px, and .tr-add-slot
+       pulls 7px of it back over the card), so its selector stops where the group cards stop. */
+    .tr-colhead.is-cur { padding-right: calc(42px - 7px); }
     .tr-colhead-survey { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .struct-select.is-nomatch { background: var(--bg-secondary); border-color: var(--border-base); color: var(--content-secondary); font-style: italic; }
 
@@ -1415,7 +1418,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
-              <div class="tr-cols" id="treeCols"><span class="tr-colhead" id="trColCur"></span><span class="tr-colhead" id="trColPrev"></span></div>
+              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead" id="trColPrev"></span></div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
