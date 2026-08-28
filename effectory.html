@@ -4119,8 +4119,7 @@ function renderTree() {
     body.insertAdjacentHTML('beforeend',
       '<div class="tr-nostruct-fill" aria-hidden="true"><div class="tr-nostruct-panel"><div class="tr-nostruct-msg">' +
         '<div><div class="tr-nostruct-title">No structure chosen</div>' +
-        '<div class="tr-nostruct-sub">Pick a structure above to link these ' +
-        esc(state.treeStructure.toLowerCase()) + ' groups to.</div></div>' +
+        '<div class="tr-nostruct-sub">Pick a structure above to link these groups to</div></div>' +
       '</div></div></div>');
   }
 
@@ -5332,7 +5331,7 @@ const TOUR_STEPS = [
     title: 'Pick the structure in this survey',
     text: 'Start with the breakdown you want to compare: your organizational structure, location, or job family.' },
   { target: () => document.querySelector('[data-structbtn="prev"]'),
-    title: 'And the one it continues',
+    title: 'Then the structure it continues',
     text: 'Usually the structure with the same name. Change it if the previous survey called that structure something else, or never had it at all.' },
   { target: () => document.querySelector('#treeBody .tr-lrow.is-empty') ||
                   document.querySelector('#treeBody .tr-card-right') ||
