@@ -1515,7 +1515,7 @@
 
 <!-- Changing the structure on the other side drops the links made against the old one -->
 <div class="overlay" id="structChangeOverlay" hidden>
-  <div class="dialog dialog-s" role="dialog" aria-modal="true" aria-labelledby="sc-title">
+  <div class="dialog dialog-xs" role="dialog" aria-modal="true" aria-labelledby="sc-title">
     <button class="dialog-close" aria-label="Close" data-close="structChangeOverlay"><i data-icon="cross"></i></button>
     <div class="dialog-header is-sm">
       <div class="dialog-header-top">
@@ -2799,8 +2799,8 @@ function setPrevStructure(picked) {
   pendingPrevStructure = picked;
   const body = $('#scBody');
   if (body) body.textContent = had === 1
-    ? '1 group in ' + from.toLowerCase() + ' is linked to it. Changing the structure removes that link.'
-    : had + ' groups in ' + from.toLowerCase() + ' are linked to it. Changing the structure removes those links.';
+    ? 'The link you already made in ' + from.toLowerCase() + ' will be removed. The groups themselves stay.'
+    : 'The ' + had + ' links you already made in ' + from.toLowerCase() + ' will be removed. The groups themselves stay.';
   closeStructMenus();
   openOverlay('structChangeOverlay');
 }
