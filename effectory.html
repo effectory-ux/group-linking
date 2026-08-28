@@ -1513,6 +1513,24 @@
   </div>
 </div>
 
+<!-- Changing the structure on the other side drops the links made against the old one -->
+<div class="overlay" id="structChangeOverlay" hidden>
+  <div class="dialog dialog-s" role="dialog" aria-modal="true" aria-labelledby="sc-title">
+    <button class="dialog-close" aria-label="Close" data-close="structChangeOverlay"><i data-icon="cross"></i></button>
+    <div class="dialog-header is-sm">
+      <div class="dialog-header-top">
+        <i class="dialog-header-icon is-warning" data-icon="info"></i>
+        <h3 class="dialog-title" id="sc-title">Change the linked structure?</h3>
+      </div>
+      <p class="dialog-subtitle" id="scBody"></p>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" data-close="structChangeOverlay">Cancel</button>
+      <button class="btn btn-primary" id="scConfirm" data-autofocus>Change structure</button>
+    </div>
+  </div>
+</div>
+
 <!-- First-match celebration -->
 <div class="overlay" id="firstMatchOverlay" hidden>
   <div class="dialog dialog-s fm-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-title">
@@ -2771,15 +2789,25 @@ function clearStructureLinks(name) {
     (nodes || []).forEach(x => { x.links = []; x.noMatch = false; if (x.children) walk(x.children); });
   })(TREES[name]);
 }
+// Two halves: the question, and the work. The question is a dialog, so the answer arrives later.
+var pendingPrevStructure;
 function setPrevStructure(picked) {
   const from = state.treeStructure;
   if (prevStructureFor(from) === picked) return;
   const had = structureLinkCount(from);
-  if (had && !confirm(had + (had === 1 ? ' group is' : ' groups are') + ' already linked in ' +
-      from.toLowerCase() + '. Changing the structure on the other side removes ' +
-      (had === 1 ? 'that link' : 'those links') + '. Continue?')) return;
+  if (!had) { applyPrevStructure(picked); return; }
+  pendingPrevStructure = picked;
+  const body = $('#scBody');
+  if (body) body.textContent = had === 1
+    ? '1 group in ' + from.toLowerCase() + ' is linked to it. Changing the structure removes that link.'
+    : had + ' groups in ' + from.toLowerCase() + ' are linked to it. Changing the structure removes those links.';
+  closeStructMenus();
+  openOverlay('structChangeOverlay');
+}
+function applyPrevStructure(picked) {
+  const from = state.treeStructure;
   state.prevStructureMap[from] = picked;
-  if (had) clearStructureLinks(from);
+  clearStructureLinks(from);
   state.treeLinkingNodeId = null;
   state.treeStatusFilter.clear();
   clearTreeSelection();
@@ -2787,6 +2815,12 @@ function setPrevStructure(picked) {
   toast(picked ? from + ' now links into ' + picked.toLowerCase()
                : from + ' has no structure to link into');
 }
+document.addEventListener('click', (e) => {
+  if (e.target.closest && e.target.closest('#scConfirm')) {
+    $('#structChangeOverlay').hidden = true;
+    applyPrevStructure(pendingPrevStructure);
+  }
+});
 
 function typeTag(s) {
   const map = {
