@@ -613,7 +613,7 @@
     :root { --gl-gutter: 60px; }
     /* The rule under the heads separates the structures from the groups they hold. It belongs to the
        table, so it spans the columns and stops there, unlike the toolbar band above it. */
-    .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-base); padding: var(--spacing-base-tight) 0; background: var(--bg-interface-body); border-bottom: 1px solid var(--border-base); }
+    .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-loose); padding: var(--spacing-base-tight) 0 var(--spacing-loose); background: var(--bg-interface-body); border-bottom: 1px solid var(--border-base); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     /* direct children only: the heads now hold a structure selector, which has its own type */
     .tr-cols > span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
