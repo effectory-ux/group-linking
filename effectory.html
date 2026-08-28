@@ -836,6 +836,10 @@
        The card is the design system's .announcement, floated over the page so the work underneath
        stays usable. The tour is a ring around one control at a time plus a card explaining it. */
     .gl-ann { position: fixed; right: var(--spacing-loose); bottom: var(--spacing-loose); z-index: 70; animation: glAnnIn var(--motion-slow) var(--ease-out) both; }
+    /* the blue of the announcement's colour set: the card takes the subtle tint, the button the
+       matching accent. Both themes come along, since these are the tokens the set is built on. */
+    .gl-ann .announcement { background: var(--bg-info-subtle); }
+    .gl-ann .btn-primary { --bg-brand: var(--bg-info); --border-brand: var(--border-info-hover); }
     @keyframes glAnnIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     /* the veil catches clicks so the page underneath cannot be used mid-tour */
     .gl-tour-veil { position: fixed; inset: 0; z-index: 80; }
