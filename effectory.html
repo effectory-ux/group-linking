@@ -396,9 +396,9 @@
 
 
     /* ── Structure (in-page) ── */
-    /* Search and filters share one row, on the card itself: the bar they used to sit in was there
-       for the structure selector, which now names itself in each column head. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-bottom: var(--spacing-base); padding: 0; }
+    /* Search and filters share one row, as a band that runs the full width of the card: no radius,
+       no inset, so it reads as a toolbar for the table rather than a box floating on it. */
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: var(--spacing-base-tight) var(--gl-bleed); background: var(--bg-secondary); }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
@@ -544,7 +544,9 @@
     /* Group-links section — plain on the page (no card chrome), aligned with the content column */
     .gl-links-card { overflow: visible; }
     /* search + filters + tree get 12px side padding (structure bar above stays flush) */
-    .tr-scope { padding: 0 var(--spacing-base-tight); }
+    /* --gl-bleed is how far a full-width band has to reach to hit the card's edges: this scope's
+       own padding plus the card padding around it. Restated at the narrow breakpoint below. */
+    .tr-scope { padding: 0 var(--spacing-base-tight); --gl-bleed: calc(var(--spacing-loose) + var(--spacing-base-tight)); }
     /* prominent status filter chips with counts */
     .tr-filters { display: flex; flex-wrap: wrap; gap: var(--spacing-tight); }
     /* per-tab description of the current view — plain text, tucked just under the tabs */
@@ -996,7 +998,7 @@
       .bc-trail { display: none; }
       /* a 375px screen left 233px for a group row; every layer gave some padding back */
       .sacc-body-pad { padding-left: var(--spacing-base-tight); padding-right: var(--spacing-base-tight); }
-      .tr-scope { padding-left: 0; padding-right: 0; }
+      .tr-scope { padding-left: 0; padding-right: 0; --gl-bleed: var(--spacing-base-tight); }
       .trm-toggle, .trm-toggle-spacer { width: 24px; }
       .acc-head { padding: var(--spacing-base); }
       .gl-explainer { padding: var(--spacing-loose) var(--spacing-base); }
