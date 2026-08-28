@@ -5332,16 +5332,19 @@ document.addEventListener('click', (e) => {
 // interrupting with one, and the tour walks the three decisions in the order you make them.
 const TOUR_STEPS = [
   { target: () => document.querySelector('[data-structbtn="cur"]'),
-    title: 'Pick the structure in this survey',
-    text: 'Start with the breakdown you want to compare: your organizational structure, location, or job family.' },
+    title: 'Pick a structure to link',
+    text: 'You work through one at a time: organizational structure, location, or job family' },
   { target: () => document.querySelector('[data-structbtn="prev"]'),
-    title: 'Then the structure it continues',
-    text: 'Usually the structure with the same name. Change it if the previous survey called that structure something else, or never had it at all.' },
+    title: 'Choose its match in the previous survey',
+    text: 'The structure with the same name is picked for you. Change it if that survey called it something else, or never had it.' },
   { target: () => document.querySelector('#treeBody .tr-lrow.is-empty') ||
                   document.querySelector('#treeBody .tr-card-right') ||
                   document.querySelector('#treeBody .tr-card'),
-    title: 'Match each group to its counterpart',
-    text: 'Pick the group this one continues. Its scores then appear as a trend, instead of starting over.' },
+    title: 'Link each group to its match',
+    text: 'Pick the group it continues, and their results line up as one trend' },
+  { target: () => document.querySelector('.tr-controls .tr-filter-group'),
+    title: 'Find the groups that still need you',
+    text: 'Suggestions are matches we found, waiting for you to confirm. No link yet holds everything still without one.' },
 ];
 
 function buildAnnouncement() {
@@ -5357,7 +5360,9 @@ function buildAnnouncement() {
       '<button class="ann-close ib ib-24 ib-secondary" id="glAnnClose" aria-label="Dismiss"><i data-icon="cross"></i></button>' +
       '<div class="ann-body">' +
         '<p class="ann-title">Need help setting up the links?</p>' +
-        '<p class="ann-text">Learn how to link your groups from one survey to the next, so you can compare results over time. It takes three steps.</p>' +
+        // the count comes from the tour, so the promise cannot drift from what it delivers
+        '<p class="ann-text">Learn how to link your groups from one survey to the next. ' +
+          'It takes ' + TOUR_STEPS.length + ' steps.</p>' +
         '<div class="ann-actions">' +
           '<button class="btn btn-primary" id="glAnnStart">View tutorial</button>' +
         '</div>' +
