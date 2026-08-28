@@ -842,11 +842,11 @@
     .gl-ann .btn-primary { --bg-brand: var(--bg-info); --border-brand: var(--border-info-hover); }
     @keyframes glAnnIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     /* the veil catches clicks so the page underneath cannot be used mid-tour */
-    .gl-tour-veil { position: fixed; inset: 0; z-index: 80; }
-    /* one ring, dimming everything outside it with its own shadow — no mask, no cut-out maths */
-    /* No transition on the position: the ring is repositioned on every scroll event, and a
+    /* The tour marks its target the way the design system marks focus, and otherwise leaves the page
+       alone: no dimming and no click catcher, so you can look around while a step is up.
+       No transition on the position: the ring is repositioned on every scroll event, and a
        transition makes it chase the target instead of sitting on it. */
-    .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; box-shadow: 0 0 0 9999px var(--bg-interface-overlay); }
+    .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; outline: 2px solid var(--border-brand); }
     /* the card itself is the design system's .spotlight — this only places it */
     .gl-tour-pop { position: fixed; z-index: 82; }
     @media (prefers-reduced-motion: reduce) { .gl-ann, .gl-tour-ring { animation: none; transition: none; } }
@@ -5244,14 +5244,13 @@ function setAnnouncement(show) {
 }
 
 var tourAt = -1;
-function tourEls() { return { veil: $('#glTourVeil'), ring: $('#glTourRing'), pop: $('#glTourPop') }; }
+function tourEls() { return { ring: $('#glTourRing'), pop: $('#glTourPop') }; }
 function buildTour() {
-  if ($('#glTourVeil')) return;
-  const veil = document.createElement('div'); veil.className = 'gl-tour-veil'; veil.id = 'glTourVeil'; veil.hidden = true;
+  if ($('#glTourRing')) return;
   const ring = document.createElement('div'); ring.className = 'gl-tour-ring'; ring.id = 'glTourRing'; ring.hidden = true;
   const pop = document.createElement('div'); pop.className = 'gl-tour-pop'; pop.id = 'glTourPop'; pop.hidden = true;
   pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true'); pop.setAttribute('aria-labelledby', 'glTourTitle');
-  document.body.append(veil, ring, pop);
+  document.body.append(ring, pop);
 }
 // Put the ring on the target and the card beside it: below when there is room, above otherwise.
 function placeTour() {
@@ -5274,7 +5273,7 @@ function placeTour() {
 function showTourStep(i) {
   tourAt = i;
   const step = TOUR_STEPS[i]; if (!step) { endTour(); return; }
-  const { veil, ring, pop } = tourEls();
+  const { ring, pop } = tourEls();
   const last = i === TOUR_STEPS.length - 1;
   // the dots carry the progress, so the step count is for screen readers only
   const dots = TOUR_STEPS.map((s, n) =>
@@ -5289,7 +5288,7 @@ function showTourStep(i) {
           (last ? 'Got it!' : 'Next') + '</button>' +
       '</div>' +
     '</div>';
-  veil.hidden = ring.hidden = pop.hidden = false;
+  ring.hidden = pop.hidden = false;
   const el = step.target();
   if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   // measure after the scroll settles, and again next frame in case the card's height changed
@@ -5308,8 +5307,7 @@ function startTour() {
   showTourStep(0);
 }
 function endTour() {
-  const { veil, ring, pop } = tourEls();
-  if (veil) veil.hidden = true;
+  const { ring, pop } = tourEls();
   if (ring) ring.hidden = true;
   if (pop) pop.hidden = true;
   window.removeEventListener('resize', placeTour);
