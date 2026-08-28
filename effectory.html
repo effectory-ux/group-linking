@@ -1518,14 +1518,11 @@
   <div class="dialog dialog-xs" role="dialog" aria-modal="true" aria-labelledby="sc-title">
     <button class="dialog-close" aria-label="Close" data-close="structChangeOverlay"><i data-icon="cross"></i></button>
     <div class="dialog-header is-sm">
-      <div class="dialog-header-top">
-        <i class="dialog-header-icon is-warning" data-icon="info"></i>
-        <h3 class="dialog-title" id="sc-title">Change the linked structure?</h3>
-      </div>
+      <h3 class="dialog-title" id="sc-title">Change the linked structure?</h3>
       <p class="dialog-subtitle" id="scBody"></p>
     </div>
     <div class="dialog-footer">
-      <button class="btn btn-secondary" data-close="structChangeOverlay">Cancel</button>
+      <button class="btn btn-secondary" data-close="structChangeOverlay">Keep current structure</button>
       <button class="btn btn-primary" id="scConfirm" data-autofocus>Change structure</button>
     </div>
   </div>
@@ -1668,9 +1665,9 @@
 
 <!-- Warning: changing the previous survey clears the current links -->
 <div class="overlay" id="survWarnOverlay" hidden>
-  <div class="dialog dialog-s" role="dialog" aria-modal="true" aria-labelledby="survWarn-title">
+  <div class="dialog dialog-xs" role="dialog" aria-modal="true" aria-labelledby="survWarn-title">
     <button class="dialog-close" aria-label="Close" data-close="survWarnOverlay"><i data-icon="cross"></i></button>
-    <div class="dialog-header">
+    <div class="dialog-header is-sm">
       <h3 class="dialog-title" id="survWarn-title">Change the previous survey?</h3>
       <p class="dialog-subtitle">The group links you’ve made are tied to the current previous survey. Switching to <strong id="survWarnName"></strong> clears them and starts from its own suggestions.</p>
     </div>
@@ -2798,9 +2795,13 @@ function setPrevStructure(picked) {
   if (!had) { applyPrevStructure(picked); return; }
   pendingPrevStructure = picked;
   const body = $('#scBody');
-  if (body) body.textContent = had === 1
-    ? 'The link you already made in ' + from.toLowerCase() + ' will be removed. The groups themselves stay.'
-    : 'The ' + had + ' links you already made in ' + from.toLowerCase() + ' will be removed. The groups themselves stay.';
+  // the same sentence as the survey warning next door: what the links are tied to, then what
+  // switching does to them
+  const to = picked ? picked.toLowerCase() : 'no match';
+  if (body) body.innerHTML = 'The group links you’ve made are tied to ' +
+    esc((prevStructureFor(from) || 'this structure').toLowerCase()) +
+    ' in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')) +
+    '. Switching to <strong>' + esc(to) + '</strong> clears them and starts from its own suggestions.';
   closeStructMenus();
   openOverlay('structChangeOverlay');
 }
