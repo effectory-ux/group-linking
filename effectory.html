@@ -850,11 +850,13 @@
       60%  { opacity: 1; }
       to   { opacity: 1; transform: none; }
     }
-    /* The tour marks its target the way the design system marks focus, and otherwise leaves the page
-       alone: no dimming and no click catcher, so you can look around while a step is up.
+    /* The spotlight's own arrow does the pointing: eff-tooltip-dialog treats marking the target as
+       optional (addHighlightToTargetElement / addOutlineToTargetElement), and the design system has
+       no resting style for it beyond the focus outline, which means something else. The ring is kept
+       as the element that positions the card, with nothing drawn.
        No transition on the position: the ring is repositioned on every scroll event, and a
        transition makes it chase the target instead of sitting on it. */
-    .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; outline: 2px solid var(--border-brand); }
+    .gl-tour-ring { position: fixed; border-radius: var(--radius-md); z-index: 81; pointer-events: none; }
     /* the card itself is the design system's .spotlight — this only places it */
     .gl-tour-pop { position: fixed; z-index: 82; }
     @media (prefers-reduced-motion: reduce) { .gl-ann, .gl-tour-ring { animation: none; transition: none; } }
@@ -5354,6 +5356,11 @@ const TOUR_STEPS = [
                   document.querySelector('#treeBody .tr-card'),
     title: 'Link each group to its match',
     text: 'Pick the same group in the previous survey. If your structure changed since then, pick the one that comes closest.' },
+  { target: () => (document.querySelector('#treeBody .tr-origin.is-suggested') ||
+                   document.querySelector('#treeBody .tr-origin.is-auto') ||
+                   document.querySelector('.tr-filters')).closest('.tr-lrow, .tr-filters'),
+    title: 'You will not have to do all of them',
+    text: 'Where enough of the same people are in both groups, the match is filled in for you. Check those and confirm them.' },
 ];
 
 function buildAnnouncement() {
