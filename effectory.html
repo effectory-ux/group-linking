@@ -837,8 +837,6 @@
        stays usable. The tour is a ring around one control at a time plus a card explaining it. */
     .gl-ann { position: fixed; right: var(--spacing-loose); bottom: var(--spacing-loose); z-index: 70; animation: glAnnIn var(--motion-slow) var(--ease-out) both; }
     @keyframes glAnnIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-    .gl-ann .ann-media { height: 132px; background: var(--bg-brand-subtle); }
-    .gl-ann .ann-media img { object-fit: contain; padding: var(--spacing-base-tight); }
     /* the veil catches clicks so the page underneath cannot be used mid-tour */
     .gl-tour-veil { position: fixed; inset: 0; z-index: 80; }
     /* one ring, dimming everything outside it with its own shadow — no mask, no cut-out maths */
@@ -5354,10 +5352,9 @@ function buildAnnouncement() {
   el.innerHTML =
     '<div class="announcement">' +
       '<button class="ann-close ib ib-24 ib-secondary" id="glAnnClose" aria-label="Dismiss"><i data-icon="cross"></i></button>' +
-      '<div class="ann-media"><img src="https://effectory-ux.github.io/Engage-Design-system-/assets/illustrations/group-linking-explainer.png" alt="" /></div>' +
       '<div class="ann-body">' +
-        '<p class="ann-title">Need a hand?</p>' +
-        '<p class="ann-text">There is a short walkthrough of this page if you want one.</p>' +
+        '<p class="ann-title">Not sure how this works?</p>' +
+        '<p class="ann-text">We\'ll walk you through it</p>' +
         '<div class="ann-actions">' +
           '<button class="btn btn-primary" id="glAnnStart">View tutorial</button>' +
         '</div>' +
