@@ -5197,20 +5197,20 @@ document.addEventListener('click', (e) => {
 // groups, with no hint of what to do first. The announcement offers a tour rather than
 // interrupting with one, and the tour walks the three decisions in the order you make them.
 const TOUR_STEPS = [
+  { target: () => document.querySelector('.tr-controls .tr-filter-group'),
+    title: 'See how much is left to link',
+    text: 'Each filter narrows the list, and its count tells you how many groups are in it' },
   { target: () => document.querySelector('[data-structbtn="cur"]'),
     title: 'Pick a structure to link',
-    text: 'You work through one at a time: organizational structure, location, or job family' },
+    text: 'You can link more than one, and you work through them a structure at a time' },
   { target: () => document.querySelector('[data-structbtn="prev"]'),
-    title: 'Choose its match in the previous survey',
-    text: 'The structure with the same name is picked for you. Change it if that survey called it something else, or never had it.' },
+    title: 'Choose the structure to link it with',
+    text: 'The one with the same name is picked for you, which is usually right. Change it if that survey called it something else.' },
   { target: () => document.querySelector('#treeBody .tr-lrow.is-empty') ||
                   document.querySelector('#treeBody .tr-card-right') ||
                   document.querySelector('#treeBody .tr-card'),
     title: 'Link each group to its match',
     text: 'Pick the group it continues, and their results line up as one trend' },
-  { target: () => document.querySelector('.tr-controls .tr-filter-group'),
-    title: 'Find the groups that still need you',
-    text: 'Suggestions are matches we found, waiting for you to confirm. No link yet holds everything still without one.' },
 ];
 
 function buildAnnouncement() {
