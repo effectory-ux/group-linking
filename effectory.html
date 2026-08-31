@@ -613,9 +613,15 @@
     /* the gutter, and the tab that rides after every left-hand card (.tr-add-btn is 42px, of which
        .tr-add-slot pulls 7px back over the card) */
     :root { --gl-gutter: 60px; --tr-addslot: 35px; }
-    /* The rule under the heads separates the structures from the groups they hold. It belongs to the
-       table, so it spans the columns and stops there, unlike the toolbar band above it. */
-    .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-loose); padding: var(--spacing-base-tight) 0 var(--spacing-loose); background: var(--bg-interface-body); border-bottom: 1px solid var(--border-base); }
+    /* The header strip carries the selected structure's own colour: the tint the old structure bar
+       had, the subtle background mixed back towards the card so it stays a wash, not a block. It
+       runs to the card's edges; the rule under it still lines up with the columns. */
+    .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--gl-bleed)) var(--spacing-loose); padding: var(--spacing-base-tight) var(--gl-bleed) var(--spacing-loose); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
+    .tr-cols.is-blue { background: color-mix(in srgb, var(--bg-info-subtle) 55%, var(--bg-base)); }
+    .tr-cols.is-green { background: color-mix(in srgb, var(--bg-positive-subtle) 55%, var(--bg-base)); }
+    .tr-cols.is-orange { background: color-mix(in srgb, var(--bg-warning-subtle) 55%, var(--bg-base)); }
+    /* the divider stays a table rule: it spans the columns, not the tinted strip */
+    .tr-cols::after { content: ''; position: absolute; left: var(--gl-bleed); right: var(--gl-bleed); bottom: 0; height: 1px; background: var(--border-base); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     /* direct children only: the heads now hold a structure selector, which has its own type */
     .tr-cols > span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
@@ -2748,6 +2754,14 @@ function structSelectHTML(side, label, current, options) {
 function renderStructCards() {
   const cur = $('#trColCur'), prev = $('#trColPrev');
   if (!cur || !prev) return;
+
+  // the strip takes the colour of the structure being worked on, the way the old bar did.
+  // is-stuck is set by the scroll observer, so it is preserved rather than overwritten.
+  const meta = STRUCT_META[state.treeStructure] || { color: 'blue' };
+  const cols = $('#treeCols');
+  if (cols) {
+    ['blue', 'green', 'orange'].forEach(c => cols.classList.toggle('is-' + c, c === (meta.color || 'blue')));
+  }
 
   // left: the structures of this survey, with how far each one has got
   const curOptions = STRUCTURES.map(name => {
