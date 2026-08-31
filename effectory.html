@@ -623,10 +623,12 @@
     /* Whose column it is, and which of that survey's structures it shows. One selector per column,
        under the survey it belongs to, so neither has to say which survey it applies to. */
     .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
-    /* the compared structure: a value plus an explicit Change, the same grammar as step 1 */
-    .struct-select-wrap.tr-pair { display: flex; align-items: stretch; gap: var(--spacing-tight); }
-    .tr-pair .struct-select.is-static { flex: 1; min-width: 0; cursor: default; }
-    .tr-pair .tr-pair-change { flex-shrink: 0; }
+    /* Step 1's connector between the two structure selectors: line, link dot, line. It sits at
+       the selector row's height, so it ties the controls together rather than the titles. */
+    .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; gap: var(--spacing-extra-tight); padding: 0 var(--spacing-tight); }
+    .tcc-line { flex: 1; height: 1px; background: var(--border-action); }
+    .tcc-dot { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-full); background: var(--bg-base); border: 1px solid var(--border-base); box-shadow: var(--sh-action); display: flex; align-items: center; justify-content: center; color: var(--content-base); }
+    .tcc-dot i { width: 14px; height: 14px; display: flex; }
     /* The left column carries the add tab after every card (.tr-add-btn is 42px, and .tr-add-slot
        pulls 7px of it back over the card), so its selector stops where the group cards stop. */
     .tr-colhead.is-cur { padding-right: calc(42px - 7px); }
@@ -1458,7 +1460,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
-              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead" id="trColPrev"></span></div>
+              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
@@ -2764,22 +2766,13 @@ function renderStructCards() {
   // the chip says so, but choosing to link nothing is not a decision worth offering.
   // the panel over the column is decorative to a screen reader (it cannot be a child of the
   // rowgroup), so the reason rides along on the column head, where it costs no height
-  // Like step 1's compared-survey card: the value looks like a value, and an explicit Change
-  // button carries the verb. A second dropdown chip here read as a mirror of the left one.
-  const pm = mapped ? (STRUCT_META[mapped] || { icon: 'structure', color: 'blue' }) : null;
-  prev.innerHTML = '<span class="tr-colhead-survey">' + surveyHTML(state.selectedSurvey || '') +
+  // Step 1's grammar carried over: the left head says Current survey, this one says Compared
+  // with, and the link dot between the selectors says the two are one pairing.
+  prev.innerHTML = '<span class="tr-colhead-survey">Compared with · ' + surveyHTML(state.selectedSurvey || '') +
       (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
         esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '') + '</span>' +
-    '<span class="struct-select-wrap tr-pair">' +
-      '<span class="struct-select is-static ' + (pm ? 'is-' + pm.color : 'is-nomatch') + '">' +
-        '<i class="struct-select-icon" data-icon="' + (pm ? pm.icon : 'minus') + '"></i>' +
-        '<span class="struct-select-val">' + (mapped ? esc(mapped) : 'No match yet') + '</span>' +
-      '</span>' +
-      '<button class="btn btn-secondary tr-pair-change" data-structbtn="prev" aria-haspopup="menu" aria-expanded="false"' +
-        ' aria-label="Change which structure of ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')) + ' these groups link into">Change</button>' +
-      '<div class="struct-menu" data-structmenu="prev" role="menu" aria-label="Structure in ' +
-        esc(surveyPlain(state.selectedSurvey || 'the previous survey')) + '" hidden>' + prevOptions + '</div>' +
-    '</span>';
+    structSelectHTML('prev', 'Structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
+                     mapped, prevOptions);
   icons();
 }
 // Changing the right selector changes what every group on this structure links into, so links made
@@ -4084,7 +4077,9 @@ function renderTreeFilterDesc() {
 function setTreeTableRoles(on) {
   const table = $('#treeTable'), body = $('#treeBody'), cols = $('#treeCols');
   if (!table || !body || !cols) return;
-  const heads = cols.querySelectorAll('span');
+  // only the two heads: nested spans (the survey lines, the selector internals) and the
+  // decorative connector are not columns
+  const heads = cols.querySelectorAll(':scope > .tr-colhead');
   if (on) {
     table.setAttribute('role', 'table');
     table.setAttribute('aria-label', 'Groups in this survey and their match in ' + surveyPlain(state.selectedSurvey || ''));
