@@ -623,6 +623,10 @@
     /* Whose column it is, and which of that survey's structures it shows. One selector per column,
        under the survey it belongs to, so neither has to say which survey it applies to. */
     .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
+    /* the compared structure: a value plus an explicit Change, the same grammar as step 1 */
+    .struct-select-wrap.tr-pair { display: flex; align-items: stretch; gap: var(--spacing-tight); }
+    .tr-pair .struct-select.is-static { flex: 1; min-width: 0; cursor: default; }
+    .tr-pair .tr-pair-change { flex-shrink: 0; }
     /* The left column carries the add tab after every card (.tr-add-btn is 42px, and .tr-add-slot
        pulls 7px of it back over the card), so its selector stops where the group cards stop. */
     .tr-colhead.is-cur { padding-right: calc(42px - 7px); }
@@ -2621,21 +2625,27 @@ function renderStructCards() {
     const used = STRUCTURES.find(n => n !== state.treeStructure && prevStructureFor(n) === name);
     return structOptionHTML(name, name === mapped, 'prev',
       used ? 'Already linked from ' + esc(used.toLowerCase()) : '');
-  }).join('') +
-    '<button type="button" role="menuitemradio" aria-checked="' + (mapped === null) + '" class="struct-mi' +
-      (mapped === null ? ' is-selected' : '') + '" data-structpick="" data-structside="prev">' +
-      '<span class="struct-mi-icon"><i data-icon="minus"></i></span>' +
-      '<span class="struct-mi-body"><span class="struct-mi-name">No match yet</span>' +
-      '<span class="struct-mi-sub">Nothing in that survey to compare these groups with</span></span>' +
-      (mapped === null ? '<i class="struct-mi-check" data-icon="check"></i>' : '') +
-    '</button>';
+  }).join('');
+  // No "no match" to pick: the state exists when the previous survey has no such structure, and
+  // the chip says so, but choosing to link nothing is not a decision worth offering.
   // the panel over the column is decorative to a screen reader (it cannot be a child of the
   // rowgroup), so the reason rides along on the column head, where it costs no height
+  // Like step 1's compared-survey card: the value looks like a value, and an explicit Change
+  // button carries the verb. A second dropdown chip here read as a mirror of the left one.
+  const pm = mapped ? (STRUCT_META[mapped] || { icon: 'structure', color: 'blue' }) : null;
   prev.innerHTML = '<span class="tr-colhead-survey">' + surveyHTML(state.selectedSurvey || '') +
       (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
         esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '') + '</span>' +
-    structSelectHTML('prev', 'Structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
-                     mapped, prevOptions);
+    '<span class="struct-select-wrap tr-pair">' +
+      '<span class="struct-select is-static ' + (pm ? 'is-' + pm.color : 'is-nomatch') + '">' +
+        '<i class="struct-select-icon" data-icon="' + (pm ? pm.icon : 'minus') + '"></i>' +
+        '<span class="struct-select-val">' + (mapped ? esc(mapped) : 'No match yet') + '</span>' +
+      '</span>' +
+      '<button class="btn btn-secondary tr-pair-change" data-structbtn="prev" aria-haspopup="menu" aria-expanded="false"' +
+        ' aria-label="Change which structure of ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')) + ' these groups link into">Change</button>' +
+      '<div class="struct-menu" data-structmenu="prev" role="menu" aria-label="Structure in ' +
+        esc(surveyPlain(state.selectedSurvey || 'the previous survey')) + '" hidden>' + prevOptions + '</div>' +
+    '</span>';
   icons();
 }
 // Changing the right selector changes what every group on this structure links into, so links made
