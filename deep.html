@@ -398,7 +398,10 @@
     /* ── Structure (in-page) ── */
     /* Search and filters share one row, as a band that runs the full width of the card: no radius,
        no inset, so it reads as a toolbar for the table rather than a box floating on it. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-base); border-bottom: 1px solid var(--border-base); }
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-base); position: relative; }
+    /* the rule stops where the table's columns do, rather than running out to the card's edges,
+       so it is drawn as a pseudo-element: the row itself still spans the full width */
+    .tr-controls::after { content: ''; position: absolute; left: var(--gl-bleed); right: var(--gl-bleed); bottom: 0; height: 1px; background: var(--border-base); }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
