@@ -625,12 +625,10 @@
     .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
     /* a field label under the survey title, tight to the select it names */
     .tr-colhead-label { font-size: 12px; font-weight: 500; line-height: 1.6; color: var(--content-secondary); margin-bottom: calc(-1 * var(--spacing-extra-tight)); }
-    /* Step 1's connector between the two structure selectors: line, link dot, line. It sits at
-       the selector row's height, so it ties the controls together rather than the titles. */
-    .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; gap: var(--spacing-extra-tight); padding: 0 var(--spacing-tight); }
-    .tcc-line { flex: 1; height: 1px; background: var(--border-action); }
-    .tcc-dot { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-full); background: var(--bg-base); border: 1px solid var(--border-base); box-shadow: var(--sh-action); display: flex; align-items: center; justify-content: center; color: var(--content-base); }
-    .tcc-dot i { width: 14px; height: 14px; display: flex; }
+    /* The link between the two selects: just the glyph. Step 1's full line-dot-line connector
+       crowded the 60px gutter, which also carries the green link lines below. */
+    .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; justify-content: center; color: var(--content-subtle); }
+    .tr-colhead-conn i { width: 16px; height: 16px; display: flex; }
     /* The left column carries the add tab after every card (.tr-add-btn is 42px, and .tr-add-slot
        pulls 7px of it back over the card), so its selector stops where the group cards stop. */
     .tr-colhead.is-cur { padding-right: calc(42px - 7px); }
@@ -1461,7 +1459,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
-              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
+              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><i data-icon="link"></i></span><span class="tr-colhead" id="trColPrev"></span></div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
