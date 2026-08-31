@@ -398,7 +398,7 @@
     /* ── Structure (in-page) ── */
     /* Search and filters share one row, as a band that runs the full width of the card: no radius,
        no inset, so it reads as a toolbar for the table rather than a box floating on it. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-secondary); }
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-base); }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
@@ -616,12 +616,19 @@
     /* The header strip carries the selected structure's own colour: the tint the old structure bar
        had, the subtle background mixed back towards the card so it stays a wash, not a block. It
        runs to the card's edges; the rule under it still lines up with the columns. */
-    .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--gl-bleed)) var(--spacing-loose); padding: var(--spacing-base-tight) var(--gl-bleed) var(--spacing-loose); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
+    /* the tint reaches past the columns by its own padding, so the selects stay aligned with the
+       cards below while the panel keeps air around them, well inside the card's edges */
+    .tr-cols { --tr-tint-pad: var(--spacing-base); position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--tr-tint-pad)) var(--spacing-loose); padding: var(--spacing-base-tight) var(--tr-tint-pad); border-radius: var(--radius-lg); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
+    /* the survey names sit above the tint, on the card itself */
+    .tr-surveys { display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin-bottom: var(--spacing-tight); font-size: 16px; font-weight: 600; color: var(--content-base); }
+    .tr-surveys > span:first-child { grid-column: 1; }
+    .tr-surveys > span:last-child { grid-column: 3; }
+    .tr-surveys > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tr-cols.is-blue { background: color-mix(in srgb, var(--bg-info-subtle) 55%, var(--bg-base)); }
     .tr-cols.is-green { background: color-mix(in srgb, var(--bg-positive-subtle) 55%, var(--bg-base)); }
     .tr-cols.is-orange { background: color-mix(in srgb, var(--bg-warning-subtle) 55%, var(--bg-base)); }
-    /* the divider stays a table rule: it spans the columns, not the tinted strip */
-    .tr-cols::after { content: ''; position: absolute; left: var(--gl-bleed); right: var(--gl-bleed); bottom: 0; height: 1px; background: var(--border-base); }
+    /* the divider is a table rule in the gap below the panel: it spans the columns, not the tint */
+    .tr-cols::after { content: ''; position: absolute; left: var(--tr-tint-pad); right: var(--tr-tint-pad); bottom: calc(-1 * var(--spacing-base)); height: 1px; background: var(--border-base); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     /* direct children only: the heads now hold a structure selector, which has its own type */
     .tr-cols > span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
@@ -646,7 +653,6 @@
     /* The left column carries the add tab after every card, so its selector stops where the group
        cards stop rather than at the column edge. */
     .tr-colhead.is-cur { padding-right: var(--tr-addslot); }
-    .tr-colhead-survey { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; color: var(--content-base); }
     .struct-select.is-nomatch { background: var(--bg-secondary); border-color: var(--border-base); color: var(--content-secondary); font-style: italic; }
 
     /* Two columns of cards + a middle connector column */
@@ -1474,6 +1480,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
+              <div class="tr-surveys"><span id="trSurvCur"></span><span></span><span id="trSurvPrev"></span></div>
               <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
               <div id="treeBody"></div>
             </div>
@@ -2774,8 +2781,9 @@ function renderStructCards() {
         '<span class="struct-mi-count ' + st + '">' + p.linked + ' of ' + p.total + '</span> linked';
     return structOptionHTML(name, name === state.treeStructure, 'cur', sub);
   }).join('');
-  cur.innerHTML = '<span class="tr-colhead-survey">Current survey · ' + surveyHTML(CURRENT_SURVEY) + '</span>' +
-    '<span class="tr-colhead-label">Selected structure</span>' +
+  const sc = $('#trSurvCur');
+  if (sc) sc.innerHTML = 'Current survey · ' + surveyHTML(CURRENT_SURVEY);
+  cur.innerHTML = '<span class="tr-colhead-label">Selected structure</span>' +
     structSelectHTML('cur', 'Selected structure', state.treeStructure, curOptions);
 
   // right: the structures the previous survey has, plus the option of no match at all
@@ -2791,10 +2799,11 @@ function renderStructCards() {
   // rowgroup), so the reason rides along on the column head, where it costs no height
   // Step 1's grammar as field labels: Selected structure on the left, Compared with here,
   // each under its survey title, with the link dot between the two selects.
-  prev.innerHTML = '<span class="tr-colhead-survey">' + surveyHTML(state.selectedSurvey || '') +
-      (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
-        esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '') + '</span>' +
-    '<span class="tr-colhead-label">Compared with</span>' +
+  const sp = $('#trSurvPrev');
+  if (sp) sp.innerHTML = surveyHTML(state.selectedSurvey || '') +
+    (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
+      esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '');
+  prev.innerHTML = '<span class="tr-colhead-label">Compared with</span>' +
     structSelectHTML('prev', 'Compared with structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
                      mapped, prevOptions);
   icons();
