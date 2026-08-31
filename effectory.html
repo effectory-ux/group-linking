@@ -398,7 +398,7 @@
     /* ── Structure (in-page) ── */
     /* Search and filters share one row, as a band that runs the full width of the card: no radius,
        no inset, so it reads as a toolbar for the table rather than a box floating on it. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--gl-bleed); background: var(--bg-base); position: relative; }
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-super-loose); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--gl-bleed); background: var(--bg-base); position: relative; }
     /* the rule stops where the table's columns do, rather than running out to the card's edges,
        so it is drawn as a pseudo-element: the row itself still spans the full width */
     .tr-controls::after { content: ''; position: absolute; left: var(--gl-bleed); right: var(--gl-bleed); bottom: 0; height: 1px; background: var(--border-base); }
@@ -417,19 +417,26 @@
     .struct-select.is-blue { background: var(--bg-info-subtle); border-color: var(--border-info); }
     .struct-select.is-green { background: var(--bg-positive-subtle); border-color: var(--border-positive); }
     .struct-select.is-orange { background: var(--bg-warning-subtle); border-color: var(--border-warning); }
-    .struct-menu { position: absolute; top: 100%; left: 0; margin-top: var(--spacing-extra-tight); width: 100%; min-width: 280px; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); box-shadow: var(--sh-card); padding: var(--spacing-extra-tight); z-index: 60; }
+    .struct-menu .menu-header { padding: 6px 10px 10px; font-size: 14px; font-weight: 600; color: var(--content-base); }
+    /* .menu in the design system: 8px padding, the popover shadow, and a scroll cap so a long
+       list cannot run off the screen. Only the positioning is ours. */
+    .struct-menu { position: absolute; top: 100%; left: 0; margin-top: var(--spacing-extra-tight); width: 100%; min-width: 280px; max-height: 280px; overflow: auto; background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-md); box-shadow: var(--sh-popovers); padding: var(--spacing-tight); z-index: 60; }
     /* button resets alongside the layout: the options are real buttons now, so the
        structure switcher can be reached and operated by keyboard */
-    .struct-mi { display: flex; align-items: center; gap: var(--spacing-tight); width: 100%; padding: var(--spacing-tight) var(--spacing-base-tight); border: none; background: none; font-family: inherit; text-align: left; border-radius: var(--radius-base); cursor: pointer; }
-    .struct-mi:hover { background: var(--bg-secondary); }
+    /* .menu-item's radius, hover token and 12px gap. Its 8px side padding is sized for a 16px
+       glyph; our icon is a 28px tile, so the sides get 12px to keep the tile off the edge. */
+    .struct-mi { display: flex; align-items: center; gap: var(--spacing-base-tight); width: 100%; padding: 10px var(--spacing-base-tight); border: none; background: none; font-family: inherit; text-align: left; border-radius: var(--radius-md); cursor: pointer; }
+    .struct-mi:hover { background: var(--bg-base-hover); }
+    /* the design system marks the chosen item with the tint as well as the check */
+    .struct-mi.is-selected, .struct-mi.is-selected:hover { background: var(--bg-brand-subtle); }
     .struct-mi-icon { width: 28px; height: 28px; border-radius: var(--radius-base); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--content-base); }
     .struct-mi-icon i { width: 16px; height: 16px; display: flex; }
     .struct-mi-icon.is-blue { background: var(--bg-info-subtle); }
     .struct-mi-icon.is-green { background: var(--bg-positive-subtle); }
     .struct-mi-icon.is-orange { background: var(--bg-warning-subtle); }
-    .struct-mi-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-    .struct-mi-name { font-size: 14px; font-weight: 600; color: var(--content-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .struct-mi-sub { font-size: 12px; color: var(--content-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .struct-mi-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .struct-mi-name { font-size: 14px; font-weight: 500; line-height: 1.6; color: var(--content-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .struct-mi-sub { font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--content-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .struct-mi-count { font-weight: 600; }
     .struct-mi-count.is-all { color: var(--content-positive); }
     .struct-mi-count.is-partial { color: var(--content-brand); }
@@ -621,9 +628,10 @@
        runs to the card's edges; the rule under it still lines up with the columns. */
     /* the tint reaches past the columns by its own padding, so the selects stay aligned with the
        cards below while the panel keeps air around them, well inside the card's edges */
-    .tr-cols { --tr-tint-pad: var(--spacing-base); display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--tr-tint-pad)); padding: var(--spacing-base-tight) var(--tr-tint-pad) var(--spacing-base); border-radius: var(--radius-lg); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
+    .tr-cols { --tr-tint-pad: var(--spacing-base); display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--tr-tint-pad)); padding: var(--spacing-base-tight) var(--tr-tint-pad); border-radius: var(--radius-lg); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
     /* the survey names are the table's column header now, so they are what pins above the rows */
-    .tr-surveys { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; padding: var(--spacing-base-tight) 0; margin-bottom: var(--spacing-tight); background: var(--bg-interface-body); font-size: 16px; font-weight: 600; color: var(--content-base); }
+    .tr-surveys { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; padding: var(--spacing-base-tight) 0; margin-bottom: var(--spacing-tight); background: var(--bg-interface-body); font-size: 14px; font-weight: 600; color: var(--content-base); }
+    .tr-surv-label { font-weight: 500; color: var(--content-secondary); }
     .tr-surveys.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     .tr-surveys > span:first-child { grid-column: 1; }
     .tr-surveys > span:last-child { grid-column: 3; }
@@ -640,18 +648,28 @@
     /* Whose column it is, and which of that survey's structures it shows. One selector per column,
        under the survey it belongs to, so neither has to say which survey it applies to. */
     .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
-    /* a field label under the survey title, tight to the select it names */
-    .tr-colhead-label { font-size: 12px; font-weight: 500; line-height: 1.6; color: var(--content-secondary); margin-bottom: calc(-1 * var(--spacing-extra-tight)); }
-    /* Step 1's connector between the two selects: line, link dot, line, at the selects' own height
-       so it ties the controls together rather than the titles.
-       The extra padding on the right centres it between the two SELECTS rather than in the grid
-       gutter: the left select stops short of its column by the add tab's width, so the visual gap
-       is wider on that side by exactly that much. The child selector is needed for the padding to
-       land at all, since `.tr-cols > span { padding: 0 }` above outranks a lone class. */
-    .tr-cols > .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; gap: var(--spacing-extra-tight); margin-left: calc(-1 * var(--tr-addslot)); padding: 0 var(--spacing-tight); }
-    .tcc-line { flex: 1; height: 1px; background: var(--border-action); }
-    .tcc-dot { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-full); background: var(--bg-base); border: 1px solid var(--border-base); box-shadow: var(--sh-action); display: flex; align-items: center; justify-content: center; color: var(--content-base); }
-    .tcc-dot i { width: 14px; height: 14px; display: flex; }
+    /* The bar is a row: label and select on the left, the pairing pushed to the right edge.
+       No connector between the columns any more: the sentence says they are paired, so the
+       line and the dot were saying it a second time. */
+    .tr-cols { display: flex !important; align-items: center; gap: var(--spacing-base); }
+    .tr-colhead.is-cur { flex: 0 0 auto; padding-right: 0; }
+    .tr-cols .struct-select { width: 280px; }
+    .tr-colhead:not(.is-cur) { flex: 1; min-width: 0; flex-direction: row; align-items: center; justify-content: flex-end; gap: var(--spacing-base-tight); min-height: 39px; }
+    /* the weight is inherited from the column head, so it is stated: only the name carries it */
+    .tr-pairline { font-size: 14px; font-weight: 400; color: var(--content-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tr-pairline strong { font-weight: 600; color: var(--content-base); }
+    .tr-pairline-none { font-style: italic; }
+    .tr-pairbtn { flex-shrink: 0; }
+    /* the dialog's one question */
+    .gl-mapopts { display: flex; flex-direction: column; gap: var(--spacing-tight); }
+    .gl-mapopt { display: flex; align-items: flex-start; gap: var(--spacing-base-tight); padding: var(--spacing-base-tight); border: 1px solid var(--border-base); border-radius: var(--radius-md); background: var(--bg-base); font-family: inherit; text-align: left; cursor: pointer; transition: border-color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out); }
+    .gl-mapopt:hover { border-color: var(--border-action-hover); background: var(--bg-base-hover); }
+    .gl-mapopt.is-on { border-color: var(--border-brand); background: var(--bg-brand-subtle); }
+    .gl-mapopt-radio { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; border-radius: var(--radius-full); border: 1px solid var(--border-action); }
+    .gl-mapopt.is-on .gl-mapopt-radio { border: 5px solid var(--bg-brand); }
+    .gl-mapopt-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .gl-mapopt-name { font-size: 14px; font-weight: 600; color: var(--content-base); }
+    .gl-mapopt-sub { font-size: 12px; color: var(--content-secondary); }
     /* The left column carries the add tab after every card, so its selector stops where the group
        cards stop rather than at the column edge. */
     .tr-colhead.is-cur { padding-right: var(--tr-addslot); }
@@ -1450,7 +1468,7 @@
 
 
             <div class="tr-scope">
-            <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
+            <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead" id="trColPrev"></span></div>
             <div class="tr-controls">
               <div class="search-wrap">
                 <span class="search-icon"><i data-icon="search"></i></span>
@@ -1703,6 +1721,24 @@
     <div class="dialog-footer">
       <button class="btn btn-secondary" data-close="survWarnOverlay">Keep current survey</button>
       <button class="btn btn-primary" id="survWarnConfirm">Change survey</button>
+    </div>
+  </div>
+</div>
+
+<!-- Which structure of the previous survey this one continues -->
+<div class="overlay" id="mapOverlay" hidden>
+  <div class="dialog dialog-xs" role="dialog" aria-modal="true" aria-labelledby="map-title">
+    <button class="dialog-close" aria-label="Close" data-close="mapOverlay"><i data-icon="cross"></i></button>
+    <div class="dialog-header is-sm">
+      <h3 class="dialog-title" id="map-title">Compare with</h3>
+      <p class="dialog-subtitle" id="mapSubtitle"></p>
+    </div>
+    <div class="dialog-body">
+      <div class="gl-mapopts" role="radiogroup" aria-labelledby="map-title" id="mapWith"></div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" data-close="mapOverlay">Cancel</button>
+      <button class="btn btn-primary" id="mapApply" data-autofocus>Apply</button>
     </div>
   </div>
 </div>
@@ -2757,6 +2793,7 @@ function structSelectHTML(side, label, current, options) {
         '<i class="struct-select-chev" data-icon="chevron-down"></i>' +
       '</button>' +
       '<div class="struct-menu" data-structmenu="' + side + '" role="menu" aria-label="' + label + '" hidden>' +
+        '<div class="menu-header" role="presentation">' + label + '</div>' +
         options + '</div>' +
     '</span>';
 }
@@ -2784,9 +2821,8 @@ function renderStructCards() {
     return structOptionHTML(name, name === state.treeStructure, 'cur', sub);
   }).join('');
   const sc = $('#trSurvCur');
-  if (sc) sc.innerHTML = 'Current survey · ' + surveyHTML(CURRENT_SURVEY);
-  cur.innerHTML = '<span class="tr-colhead-label">Selected structure</span>' +
-    structSelectHTML('cur', 'Selected structure', state.treeStructure, curOptions);
+  if (sc) sc.innerHTML = '<span class="tr-surv-label">Current survey ·</span> ' + surveyHTML(CURRENT_SURVEY);
+  cur.innerHTML = structSelectHTML('cur', 'Selected structure', state.treeStructure, curOptions);
 
   // right: the structures the previous survey has, plus the option of no match at all
   const mapped = prevStructure();
@@ -2805,11 +2841,50 @@ function renderStructCards() {
   if (sp) sp.innerHTML = surveyHTML(state.selectedSurvey || '') +
     (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
       esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '');
-  prev.innerHTML = '<span class="tr-colhead-label">Compared with</span>' +
-    structSelectHTML('prev', 'Compared with structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
-                     mapped, prevOptions);
+  // A second dropdown here read as a mirror of the left one, while it decides something else
+  // entirely. The structure is stated, and changing it is a task behind Change.
+  prev.innerHTML = '<span class="tr-pairline">' +
+      (mapped
+        ? 'Compared with <strong>' + esc(mapped) + '</strong> from previous survey'
+        : '<span class="tr-pairline-none">Not compared with anything from previous survey</span>') +
+    '</span>' +
+    '<button class="btn btn-secondary tr-pairbtn" data-mapopen="1">' + (mapped ? 'Change' : 'Choose') + '</button>';
   icons();
 }
+// Choosing the counterpart is a task rather than a control: the question is asked once, in a
+// dialog, and the answer runs through setPrevStructure so the warning about dropped links stands.
+var mapPick = null;
+function renderMapDialog() {
+  const from = state.treeStructure;
+  const sub = $('#mapSubtitle');
+  if (sub) sub.textContent = 'Which structure in ' + surveyPlain(state.selectedSurvey || 'the previous survey') +
+    ' does ' + from.toLowerCase() + ' continue?';
+  const box = $('#mapWith');
+  if (box) box.innerHTML = prevStructures().map(n => {
+    const used = STRUCTURES.find(x => x !== from && prevStructureFor(x) === n);
+    return '<button type="button" role="radio" aria-checked="' + (n === mapPick) + '" class="gl-mapopt' +
+      (n === mapPick ? ' is-on' : '') + '" data-mapwith="' + esc(n) + '">' +
+      '<span class="gl-mapopt-radio"></span><span class="gl-mapopt-body">' +
+      '<span class="gl-mapopt-name">' + esc(n) + '</span>' +
+      (used ? '<span class="gl-mapopt-sub">Already continued by ' + esc(used.toLowerCase()) + '</span>' : '') +
+      '</span></button>';
+  }).join('');
+  const apply = $('#mapApply');
+  if (apply) apply.disabled = !mapPick;
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest) return;
+  if (e.target.closest('[data-mapopen]')) {
+    mapPick = prevStructure(); renderMapDialog(); openOverlay('mapOverlay'); return;
+  }
+  const w = e.target.closest('[data-mapwith]');
+  if (w) { mapPick = w.dataset.mapwith; renderMapDialog(); return; }
+  if (e.target.closest('#mapApply')) {
+    $('#mapOverlay').hidden = true;
+    setPrevStructure(mapPick);
+  }
+});
+
 // Changing the right selector changes what every group on this structure links into, so links made
 // against the old one cannot survive it.
 function structureLinkCount(name) {
@@ -5422,9 +5497,9 @@ const TOUR_STEPS = [
   { target: () => document.querySelector('[data-structbtn="cur"]'),
     title: 'Pick a structure to link',
     text: 'You can link more than one, and you work through them a structure at a time' },
-  { target: () => document.querySelector('[data-structbtn="prev"]'),
-    title: 'Choose the structure to link it with',
-    text: 'The one with the same name is picked for you, which is usually right. Change it if that survey called it something else.' },
+  { target: () => document.querySelector('[data-mapopen]'),
+    title: 'Check what it is compared with',
+    text: 'The structure with the same name is picked for you, which is usually right. Change it if that survey called it something else.' },
   { target: () => document.querySelector('#treeBody .tr-lrow.is-empty') ||
                   document.querySelector('#treeBody .tr-card-right') ||
                   document.querySelector('#treeBody .tr-card'),
