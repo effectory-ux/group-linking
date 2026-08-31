@@ -398,7 +398,7 @@
     /* ── Structure (in-page) ── */
     /* Search and filters share one row, as a band that runs the full width of the card: no radius,
        no inset, so it reads as a toolbar for the table rather than a box floating on it. */
-    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-base); }
+    .tr-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-base); flex-wrap: wrap; margin-inline: calc(-1 * var(--gl-bleed)); margin-bottom: var(--spacing-base); padding: 20px var(--spacing-loose); background: var(--bg-base); border-bottom: 1px solid var(--border-base); }
     .tr-controls .search-wrap { flex: 1; min-width: 220px; }
     .tr-ctl { position: relative; }
     .tr-ctl .menu { position: absolute; top: 100%; right: 0; margin-top: var(--spacing-extra-tight); z-index: 60; }
@@ -627,8 +627,6 @@
     .tr-cols.is-blue { background: color-mix(in srgb, var(--bg-info-subtle) 55%, var(--bg-base)); }
     .tr-cols.is-green { background: color-mix(in srgb, var(--bg-positive-subtle) 55%, var(--bg-base)); }
     .tr-cols.is-orange { background: color-mix(in srgb, var(--bg-warning-subtle) 55%, var(--bg-base)); }
-    /* the divider is a table rule in the gap below the panel: it spans the columns, not the tint */
-    .tr-cols::after { content: ''; position: absolute; left: var(--tr-tint-pad); right: var(--tr-tint-pad); bottom: calc(-1 * var(--spacing-base)); height: 1px; background: var(--border-base); }
     .tr-cols.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     /* direct children only: the heads now hold a structure selector, which has its own type */
     .tr-cols > span { background: none; padding: 0; font-size: 14px; font-weight: 600; color: var(--content-secondary); }
