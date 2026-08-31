@@ -623,6 +623,8 @@
     /* Whose column it is, and which of that survey's structures it shows. One selector per column,
        under the survey it belongs to, so neither has to say which survey it applies to. */
     .tr-colhead { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-tight); min-width: 0; }
+    /* a field label under the survey title, tight to the select it names */
+    .tr-colhead-label { font-size: 12px; font-weight: 500; line-height: 1.6; color: var(--content-secondary); margin-bottom: calc(-1 * var(--spacing-extra-tight)); }
     /* Step 1's connector between the two structure selectors: line, link dot, line. It sits at
        the selector row's height, so it ties the controls together rather than the titles. */
     .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; gap: var(--spacing-extra-tight); padding: 0 var(--spacing-tight); }
@@ -2619,7 +2621,8 @@ function renderStructCards() {
     return structOptionHTML(name, name === state.treeStructure, 'cur', sub);
   }).join('');
   cur.innerHTML = '<span class="tr-colhead-survey">Current survey · ' + surveyHTML(CURRENT_SURVEY) + '</span>' +
-    structSelectHTML('cur', 'Structure in this survey', state.treeStructure, curOptions);
+    '<span class="tr-colhead-label">Selected structure</span>' +
+    structSelectHTML('cur', 'Selected structure', state.treeStructure, curOptions);
 
   // right: the structures the previous survey has, plus the option of no match at all
   const mapped = prevStructure();
@@ -2632,12 +2635,13 @@ function renderStructCards() {
   // the chip says so, but choosing to link nothing is not a decision worth offering.
   // the panel over the column is decorative to a screen reader (it cannot be a child of the
   // rowgroup), so the reason rides along on the column head, where it costs no height
-  // Step 1's grammar carried over: the left head says Current survey, this one says Compared
-  // with, and the link dot between the selectors says the two are one pairing.
-  prev.innerHTML = '<span class="tr-colhead-survey">Compared with · ' + surveyHTML(state.selectedSurvey || '') +
+  // Step 1's grammar as field labels: Selected structure on the left, Compared with here,
+  // each under its survey title, with the link dot between the two selects.
+  prev.innerHTML = '<span class="tr-colhead-survey">' + surveyHTML(state.selectedSurvey || '') +
       (mapped === null ? '<span class="sr-only">. No structure chosen, so there is nothing to link ' +
         esc(state.treeStructure.toLowerCase()) + ' groups to.</span>' : '') + '</span>' +
-    structSelectHTML('prev', 'Structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
+    '<span class="tr-colhead-label">Compared with</span>' +
+    structSelectHTML('prev', 'Compared with structure in ' + esc(surveyPlain(state.selectedSurvey || 'the previous survey')),
                      mapped, prevOptions);
   icons();
 }
