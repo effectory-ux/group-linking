@@ -610,7 +610,9 @@
     .gl-card-sub { font-size: 14px; color: var(--content-secondary); margin-top: 2px; }
     .gl-card-content { padding: 0; }
     /* Column headers — two grey bars, aligned to the card columns */
-    :root { --gl-gutter: 60px; }
+    /* the gutter, and the tab that rides after every left-hand card (.tr-add-btn is 42px, of which
+       .tr-add-slot pulls 7px back over the card) */
+    :root { --gl-gutter: 60px; --tr-addslot: 35px; }
     /* The rule under the heads separates the structures from the groups they hold. It belongs to the
        table, so it spans the columns and stops there, unlike the toolbar band above it. */
     .tr-cols { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 0 var(--spacing-loose); padding: var(--spacing-base-tight) 0 var(--spacing-loose); background: var(--bg-interface-body); border-bottom: 1px solid var(--border-base); }
@@ -627,11 +629,15 @@
     .tr-colhead-label { font-size: 12px; font-weight: 500; line-height: 1.6; color: var(--content-secondary); margin-bottom: calc(-1 * var(--spacing-extra-tight)); }
     /* The link between the two selects: just the glyph. Step 1's full line-dot-line connector
        crowded the 60px gutter, which also carries the green link lines below. */
-    .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; justify-content: center; color: var(--content-subtle); }
+    /* centred between the two selects, not in the grid gutter: the left select stops short of its
+       column by the add tab's width, so the visual gap is wider on that side by exactly that much */
+    /* the child selector is needed: `.tr-cols > span { padding: 0 }` above is more specific than a
+       lone class, and was silently resetting this padding to zero */
+    .tr-cols > .tr-colhead-conn { grid-column: 2; align-self: end; height: 39px; display: flex; align-items: center; justify-content: center; padding-right: var(--tr-addslot); color: var(--content-subtle); }
     .tr-colhead-conn i { width: 16px; height: 16px; display: flex; }
-    /* The left column carries the add tab after every card (.tr-add-btn is 42px, and .tr-add-slot
-       pulls 7px of it back over the card), so its selector stops where the group cards stop. */
-    .tr-colhead.is-cur { padding-right: calc(42px - 7px); }
+    /* The left column carries the add tab after every card, so its selector stops where the group
+       cards stop rather than at the column edge. */
+    .tr-colhead.is-cur { padding-right: var(--tr-addslot); }
     .tr-colhead-survey { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; color: var(--content-base); }
     .struct-select.is-nomatch { background: var(--bg-secondary); border-color: var(--border-base); color: var(--content-secondary); font-style: italic; }
 
