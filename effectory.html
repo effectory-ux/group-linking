@@ -516,8 +516,8 @@
     /* once open (after the expand animation), stop clipping so sticky headers can pin */
     .acc.is-open.is-settled .sacc-body-inner { overflow: visible; }
     .sacc-body-pad { padding: var(--spacing-loose); }
-    /* step 2 opens straight onto the toolbar band, which runs to the fold above it */
-    #acc-link .sacc-body-pad { padding-top: 0; }
+    /* step 2 opens onto the structure panel, which needs air under the fold */
+    #acc-link .sacc-body-pad { padding-top: var(--spacing-base); }
     /* the review banner, when there is one, keeps its own air below the fold */
     #acc-link .gl-cta { margin-top: var(--spacing-loose); }
     #acc-select .sacc-body-pad { background: var(--bg-secondary); }
@@ -621,9 +621,10 @@
        runs to the card's edges; the rule under it still lines up with the columns. */
     /* the tint reaches past the columns by its own padding, so the selects stay aligned with the
        cards below while the panel keeps air around them, well inside the card's edges */
-    .tr-cols { --tr-tint-pad: var(--spacing-base); position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--tr-tint-pad)) var(--spacing-loose); padding: var(--spacing-base-tight) var(--tr-tint-pad); border-radius: var(--radius-lg); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
-    /* the survey names sit above the tint, on the card itself */
-    .tr-surveys { display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin-bottom: var(--spacing-tight); font-size: 16px; font-weight: 600; color: var(--content-base); }
+    .tr-cols { --tr-tint-pad: var(--spacing-base); display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; margin: 0 calc(-1 * var(--tr-tint-pad)) var(--spacing-loose); padding: var(--spacing-base-tight) var(--tr-tint-pad); border-radius: var(--radius-lg); background: var(--bg-interface-body); transition: background var(--motion-base) var(--ease-out); }
+    /* the survey names are the table's column header now, so they are what pins above the rows */
+    .tr-surveys { position: sticky; top: var(--gl-sticky-top, 0); z-index: 20; display: grid; grid-template-columns: 1.15fr var(--gl-gutter) 1fr; gap: 0; padding: var(--spacing-base-tight) 0; margin-bottom: var(--spacing-tight); background: var(--bg-interface-body); font-size: 16px; font-weight: 600; color: var(--content-base); }
+    .tr-surveys.is-stuck { box-shadow: 0 1px 0 var(--border-base); }
     .tr-surveys > span:first-child { grid-column: 1; }
     .tr-surveys > span:last-child { grid-column: 3; }
     .tr-surveys > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1449,6 +1450,7 @@
 
 
             <div class="tr-scope">
+            <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
             <div class="tr-controls">
               <div class="search-wrap">
                 <span class="search-icon"><i data-icon="search"></i></span>
@@ -1481,8 +1483,7 @@
               <button class="shift-tip-close" id="shiftTipClose" aria-label="Dismiss tip"><i data-icon="cross"></i></button>
             </div>
             <div class="tr-table" id="treeTable">
-              <div class="tr-surveys"><span id="trSurvCur"></span><span></span><span id="trSurvPrev"></span></div>
-              <div class="tr-cols" id="treeCols"><span class="tr-colhead is-cur" id="trColCur"></span><span class="tr-colhead-conn" aria-hidden="true"><span class="tcc-line"></span><span class="tcc-dot"><i data-icon="link"></i></span><span class="tcc-line"></span></span><span class="tr-colhead" id="trColPrev"></span></div>
+              <div class="tr-surveys" id="treeSurveys"><span id="trSurvCur"></span><span aria-hidden="true"></span><span id="trSurvPrev"></span></div>
               <div id="treeBody"></div>
             </div>
             </div><!-- /tr-scope -->
@@ -2622,7 +2623,7 @@ function updateStickyOffsets() {
 // pinned, the accordion's border and shadow read as chrome floating behind them, so drop it.
 function syncStuckChrome() {
   const acc = document.querySelector('#acc-link');
-  const sp = acc && acc.querySelector('.tr-cols');
+  const sp = acc && acc.querySelector('.tr-surveys');
   const main = $('#appMain');
   if (!acc || !sp || !main) return;
   const stuck = acc.classList.contains('is-open') &&
@@ -4109,11 +4110,10 @@ function renderTreeFilterDesc() {
 // A table with no rows is not a table: the empty state that replaces the rows would sit inside
 // a rowgroup, and the column headers would describe columns that are not there.
 function setTreeTableRoles(on) {
-  const table = $('#treeTable'), body = $('#treeBody'), cols = $('#treeCols');
+  const table = $('#treeTable'), body = $('#treeBody'), cols = $('#treeSurveys');
   if (!table || !body || !cols) return;
-  // only the two heads: nested spans (the survey lines, the selector internals) and the
-  // decorative connector are not columns
-  const heads = cols.querySelectorAll(':scope > .tr-colhead');
+  // the survey names are the header row; the middle cell is the connector column's spacer
+  const heads = [$('#trSurvCur'), $('#trSurvPrev')].filter(Boolean);
   if (on) {
     table.setAttribute('role', 'table');
     table.setAttribute('aria-label', 'Groups in this survey and their match in ' + surveyPlain(state.selectedSurvey || ''));
@@ -5381,7 +5381,7 @@ var showMatchPop = null;
 // Show the sticky column-header divider only once it's actually pinned, and keep the
 // header offsets in sync with the (responsive, wrapping) structure bar height.
 (function () {
-  const cols = document.querySelector('.tr-cols');
+  const cols = document.querySelector('.tr-surveys');
   const scroller = document.querySelector('.app-main');
   if (!cols || !scroller) return;
   let obs = null;
