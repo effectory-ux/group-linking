@@ -652,9 +652,15 @@
        No connector between the columns any more: the sentence says they are paired, so the
        line and the dot were saying it a second time. */
     .tr-cols { display: flex !important; align-items: center; gap: var(--spacing-base); }
-    .tr-colhead.is-cur { flex: 0 0 auto; padding-right: 0; }
-    .tr-cols .struct-select { width: 280px; }
-    .tr-colhead:not(.is-cur) { flex: 1; min-width: 0; flex-direction: row; align-items: center; justify-content: flex-end; gap: var(--spacing-base-tight); min-height: 39px; }
+    /* The select is as wide as the group cards it scopes, so the bar's two halves sit over the
+       two columns below. The width is the card grid's own left column (1.15fr of the width left
+       over after the gutter); the add tab's slot comes off it as the padding below, so the
+       select ends where the cards end.
+       The huge shrink factor spends the select's width first when the window narrows, which keeps
+       the pairing sentence whole until the select is down to its floor. */
+    .tr-colhead.is-cur { flex: 0 1000 calc((100% - var(--gl-gutter)) * 1.15 / 2.15); min-width: 220px; }
+    .tr-cols .struct-select { width: 100%; }
+    .tr-colhead:not(.is-cur) { flex: 1 1 auto; min-width: 0; flex-direction: row; align-items: center; justify-content: flex-end; gap: var(--spacing-base-tight); min-height: 39px; }
     /* the weight is inherited from the column head, so it is stated: only the name carries it */
     .tr-pairline { font-size: 14px; font-weight: 400; color: var(--content-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tr-pairline strong { font-weight: 600; color: var(--content-base); }
@@ -5512,6 +5518,10 @@ const TOUR_STEPS = [
     text: 'Where enough of the same people are in both groups, the match is filled in for you. Check those and confirm them.' },
 ];
 
+// Parked while the header is being reworked. Set to true to offer the tour again; the tour
+// itself is untouched and still runs from the console with startTour().
+const TUTORIAL_CARD = false;
+
 function buildAnnouncement() {
   if ($('#glAnn')) return;
   const el = document.createElement('div');
@@ -5537,6 +5547,7 @@ function buildAnnouncement() {
   icons();
 }
 function setAnnouncement(show) {
+  if (show && !TUTORIAL_CARD) return;
   buildAnnouncement();
   const el = $('#glAnn'); if (!el) return;
   el.hidden = !show;
