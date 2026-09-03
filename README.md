@@ -14,3 +14,12 @@ repo bevat alleen de pagina's zelf. Een wijziging in het design system is hier m
 zichtbaar. Keerzijde: verhuist die site, dan moeten deze links mee.
 
 Toegevoegd aan de galerij op https://effectory-ux.github.io/prototypes/
+
+## Prototype toolbar
+
+Beide pagina's dragen de gedeelde [prototype toolbar](https://github.com/effectory-ux/prototype-toolbar)
+(`toolbar/`, een kopie van de gepubliceerde release; `toolbar/update.sh` ververst hem): wissel tussen de Effectory-structuur en de diepe boom, en deel de
+live link. Lokaal staat hij altijd aan. Live alleen via de collega-link
+https://effectory-ux.github.io/group-linking/effectory.html?gl-9k4p-toolbar-active — zonder
+`?gl-9k4p-toolbar-active` is het de schone versie voor testers. Wat de toolbar toont staat in
+`proto-config.js`; de toolbar zelf verandert alleen via `toolbar/` (zie `CLAUDE.md`).
